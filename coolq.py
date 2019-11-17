@@ -8,12 +8,12 @@ waken_list = {}
 today_date = date.today()
 waken_num = 0
 
-@bot.on_message('private')
+@bot.on_message()
 async def handle_msg(context):
     global today_date
     global waken_num
     if re.match('/', context['message']) is None:
-        print(context)
+        pass
     else:
         message = context['message'][1:]
 
