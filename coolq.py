@@ -23,7 +23,7 @@ async def handle_msg(context):
             waken_num = 0
 
         if message == 'help':
-            return {'reply': '我的源码存放在：github.com，尽情探索吧。'}
+            return {'reply': '我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。'}
 
         elif message == 'zao':
             if waken_list.get(context['user_id']) is None:
