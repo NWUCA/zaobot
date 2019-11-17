@@ -40,6 +40,8 @@ async def handle_msg(context):
                 return {'reply': f"你不是起床过了吗？"}
 
         elif message == 'wan':
+            if waken_list.get(context['user_id']) is None:
+                return {'reply': 'Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～'}
             sleep_time = datetime.fromtimestamp(context['time'])
             wake_time = datetime.fromtimestamp(waken_list[context['user_id']]['time'])
             del waken_list[context['user_id']]
@@ -60,7 +62,7 @@ async def handle_msg(context):
                 if duration > timedelta(hours=24):
                     del waken_list[person[0]]
                 if waken_date == today_date:
-                    msg += f"{index}. {person[1]['nickname']}, {waken_time.hour}:{waken_time.minute}\n"
+                    msg += f"\n{index}. {person[1]['nickname']}, {waken_time.hour:02d}:{waken_time.minute:02d}"
                     index += 1
             if msg == "":
                 return {'reply': 'o<<(≧口≦)>>o 还没人起床'}
@@ -68,6 +70,7 @@ async def handle_msg(context):
 
         elif message == 'flush':
             waken_list.clear()
+            waken_num = 0
             return {'reply': "咱也不知道发生了什么，咱也不敢问。"}
 
         else:
