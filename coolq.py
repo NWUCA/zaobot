@@ -14,11 +14,7 @@ async def handle_msg(context):
     global today_date
     global waken_num
     global repeat_mode
-    if repeat_mode:
-        return {'reply': context['message']}
-    elif re.match('/', context['message']) is None:
-        pass
-    else:
+    if re.match('/', context['message']) is not None:
         message = context['message'][1:]
 
         # 新的一天
@@ -92,5 +88,8 @@ async def handle_msg(context):
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
+
+    elif repeat_mode:
+        return {'reply': context['message'], 'at_sender': False}
 
 bot.run(host='0.0.0.0', port=8080)
