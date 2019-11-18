@@ -7,12 +7,16 @@ bot = CQHttp(enable_http_post=False)
 waken_list = {}
 today_date = date.today()
 waken_num = 0
+repeat_mode = 0
 
 @bot.on_message()
 async def handle_msg(context):
     global today_date
     global waken_num
-    if re.match('/', context['message']) is None:
+    global repeat_mode
+    if repeat_mode:
+        return {'reply': context['message']}
+    elif re.match('/', context['message']) is None:
         pass
     else:
         message = context['message'][1:]
@@ -69,9 +73,22 @@ async def handle_msg(context):
             return {'reply': msg}
 
         elif message == 'flush':
-            waken_list.clear()
-            waken_num = 0
-            return {'reply': "咱也不知道发生了什么，咱也不敢问。"}
+            if context['sender'].get('role') == 'owner' or 'admin':
+                waken_list.clear()
+                waken_num = 0
+                repeat_mode = 0
+                today_date = date.today()
+                return {'reply': "咱也不知道发生了什么，咱也不敢问。"}
+            else:
+                return {'reply': "你没有权限o(≧口≦)o"}
+
+        elif message == 'fudu' and (context['sender'].get('role') == 'owner' or 'admin'):
+            if repeat_mode == 0:
+                repeat_mode = 1
+                return {'reply': "复读模式已开启(๑•̀ㅂ•́)و✧"}
+            else:
+                repeat_mode = 0
+                return {'reply': "复读模式已关闭～(　TロT)σ"}
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
