@@ -69,7 +69,8 @@ async def handle_msg(context):
             return {'reply': msg}
 
         elif message == 'flush':
-            if context['sender'].get('role') == 'owner' or context['sender'].get('role') == 'admin':
+            if context['sender'].get('role') == 'owner' or context['sender'].get('role') == 'admin'\
+                    and context.get('group_id') == "102334415":
                 waken_list.clear()
                 waken_num = 0
                 repeat_mode = 0
@@ -78,7 +79,9 @@ async def handle_msg(context):
             else:
                 return {'reply': "你没有权限o(≧口≦)o"}
 
-        elif message == 'fudu' and (context['sender'].get('role') == 'owner' or context['sender'].get('role') ==  'admin'):
+        elif message == 'fudu' \
+                and context.get('group_id') == "102334415" \
+                and (context['sender'].get('role') == 'owner' or context['sender'].get('role') ==  'admin'):
             if repeat_mode == 0:
                 repeat_mode = 1
                 return {'reply': "复读模式已开启(๑•̀ㅂ•́)و✧"}
