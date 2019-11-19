@@ -59,7 +59,7 @@ async def handle_msg(context):
                 waken_time = datetime.fromtimestamp(person[1]['time'])
                 waken_date = date.fromtimestamp(person[1]['time'])
                 duration = now - waken_time
-                if duration > timedelta(hours=24):
+                if duration > timedelta(hours=12):
                     del waken_list[person[0]]
                 if waken_date == today_date:
                     msg += f"\n{index}. {person[1]['nickname']}, {waken_time.hour:02d}:{waken_time.minute:02d}"
@@ -70,7 +70,7 @@ async def handle_msg(context):
 
         elif message == 'flush':
             if context['sender'].get('role') == 'owner' or context['sender'].get('role') == 'admin'\
-                    and context.get('group_id') == "102334415":
+                    and context.get('group_id') == 102334415:
                 waken_list.clear()
                 waken_num = 0
                 repeat_mode = 0
@@ -80,7 +80,7 @@ async def handle_msg(context):
                 return {'reply': "你没有权限o(≧口≦)o"}
 
         elif message == 'fudu' \
-                and context.get('group_id') == "102334415" \
+                and context.get('group_id') == 102334415 \
                 and (context['sender'].get('role') == 'owner' or context['sender'].get('role') ==  'admin'):
             if repeat_mode == 0:
                 repeat_mode = 1
