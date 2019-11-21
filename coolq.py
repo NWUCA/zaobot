@@ -72,11 +72,11 @@ def handle_msg(context):
                 return {'reply': 'Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～'}
             sleep_time = datetime.fromtimestamp(context['time'])
             wake_time = datetime.fromtimestamp(waken_list[context['user_id']]['time'])
-            del waken_list[context['user_id']]
             duration = sleep_time - wake_time
             if duration < timedelta(minutes=30):
                 return reply("你不是才起床吗？")
             else:
+                del waken_list[context['user_id']]
                 return {'reply': '今日共清醒{}秒，辛苦了'.format(
                     str(duration).replace(':', '小时', 1).replace(':', '分', 1)
                 )}
