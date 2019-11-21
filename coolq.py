@@ -72,7 +72,7 @@ async def handle_msg(context):
             del waken_list[context['user_id']]
             duration = sleep_time - wake_time
             if duration < timedelta(minutes=30):
-                return reply(f"你不是才睡觉吗？")
+                return reply("你不是才起床吗？")
             else:
                 return {'reply': '今日共清醒{}秒，辛苦了'.format(
                     str(duration).replace(':', '小时', 1).replace(':', '分', 1)
