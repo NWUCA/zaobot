@@ -29,7 +29,7 @@ async def handle_msg(context):
     if re.match('/', context['message']) is not None:
         message = context['message'][1:]
         message = message.split()
-        command = message[1]
+        command = message[0]
         args = message[1:]
 
         # 新的一天
