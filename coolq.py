@@ -144,6 +144,8 @@ def save_handler(context):
 
 @admin_required
 def flush_handler(context):
+    if context['user_id'] == "617175214":
+        return reply("狗滑稽又来删库了(╯°Д°)╯︵ ┻━┻")
     global today_date, waken_num, repeat_mode
     waken_list.clear()
     waken_num = 0
