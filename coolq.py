@@ -100,13 +100,13 @@ def handle_msg(context):
             return {'reply': msg}
 
         elif command == 'flush':
-            flush_handler(context)
+            return flush_handler(context)
         
         elif command == 'fudu':
-            fudu_handler(context)
+            return fudu_handler(context)
 
         elif command == 'save':
-            save_handler(context)
+            return save_handler(context)
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
