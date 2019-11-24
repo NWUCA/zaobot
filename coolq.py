@@ -23,6 +23,9 @@ def reply(msg):
 
 
 def remove_timeout_user(user_id):
+    if waken_list.get(user_id) is None:
+        return
+
     now = datetime.now()
     waken_time = datetime.fromtimestamp(waken_list[user_id]['time'])
     duration = now - waken_time
