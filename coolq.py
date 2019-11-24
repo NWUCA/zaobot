@@ -124,6 +124,7 @@ class admin_required():
 
 @admin_required
 def fudu_handler(context):
+    global repeat_mode
     if repeat_mode == 0:
         repeat_mode = 1
         return {'reply': "复读模式已开启(๑•̀ㅂ•́)و✧"}
