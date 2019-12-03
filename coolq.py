@@ -22,11 +22,10 @@ def reply(msg):
     return {'reply': msg}
 
 
-def remove_timeout_user(user_id):
+def remove_timeout_user(user_id, now):
     if waken_list.get(user_id) is None:
         return
 
-    now = datetime.now()
     waken_time = datetime.fromtimestamp(waken_list[user_id]['time'])
     duration = now - waken_time
     if duration > timedelta(hours=12):
@@ -51,7 +50,7 @@ def handle_msg(context):
             return {'reply': '我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。'}
 
         elif command == 'zao':
-            remove_timeout_user(context['user_id'])
+            remove_timeout_user(context['user_id'], context['time'])
 
             if waken_list.get(context['user_id']) is None:
                 waken_list[context['user_id']] = {'time': context['time']}
@@ -60,8 +59,8 @@ def handle_msg(context):
                 else:
                     waken_list[context['user_id']]['nickname'] = context['sender']['card']
                 waken_num += 1
-                if waken_num == 1:
-                    bot.send(context, "获得成就：早起冠军")
+                # if waken_num == 1:
+                #     bot.send(context, "获得成就：早起冠军")
                 try:
                     greeting = args[0]
                 except IndexError:
@@ -157,4 +156,5 @@ def flush_handler(context):
     today_date = date.today()
     return {'reply': "清除数据成功。"}
 
-bot.run(host='0.0.0.0', port=8080)
+if __name__ == "__main__":
+    bot.run(host='0.0.0.0', port=8080)

@@ -1,0 +1,20 @@
+[
+    {
+        "message": "/zao",
+        "sender": {
+            "nickname": "user"
+        },
+        "time":1575158400,
+        "time_comment": "2019.12.1 8:00:00",
+        "user_id": 100
+    },
+    {
+        "message": "/wan",
+        "sender": {
+            "nickname": "user"
+        },
+        "time":1575205200,
+        "time_comment": "2019.12.1 21:00:00",
+        "user_id": 100
+    }
+]
