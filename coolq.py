@@ -88,7 +88,7 @@ def handle_msg(context):
             msg = ""
             index = 1
             for person in waken_list_sorted:
-                remove_timeout_user(person[0])
+                remove_timeout_user(person[0],datetime.fromtimestamp(context['time']))
                 waken_time = datetime.fromtimestamp(person[1]['time'])
                 waken_date = date.fromtimestamp(person[1]['time'])
                 if waken_date == today_date:
