@@ -13,6 +13,9 @@ try:
         waken_list = json.load(f)
     with open('waken_num.json', 'r') as f:
         waken_num = json.load(f)
+    with open('help.json', 'r') as f:
+        help_data = json.load(f)
+        help_data = '\n'.join(help_data.data)
 except IOError:
     waken_num = 0
     waken_list = {}
@@ -47,8 +50,11 @@ def handle_msg(context):
             waken_num = 0
 
         if command == 'help':
-            return {'reply': '我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。'}
+            return {'reply': help_data}
 
+        elif command == 'src':
+            return {'reply': '我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。'}
+        
         elif command == 'zao':
             remove_timeout_user(context['user_id'], context['time'])
 
