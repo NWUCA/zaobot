@@ -22,5 +22,5 @@ def test_mytest():
 def test_dir(data):
     print(data)
     # print(data())
-    assert handle_msg(data[0]) == {'reply': '你是第1起床的少年。'}
-    assert 0
+    assert '第1起床' in handle_msg(data[0])['reply']
+    # assert 0

@@ -22,13 +22,13 @@ def reply(msg):
     return {'reply': msg}
 
 
-def remove_timeout_user(user_id, now):
+def remove_timeout_user(user_id, now, hour=12):
     if waken_list.get(user_id) is None:
         return
 
     waken_time = datetime.fromtimestamp(waken_list[user_id]['time'])
     duration = now - waken_time
-    if duration > timedelta(hours=12):
+    if duration > timedelta(hours=hour):
         del waken_list[user_id]
 
     
@@ -40,6 +40,8 @@ def handle_msg(context):
         message = message.split()
         command = message[0]
         args = message[1:]
+
+        remove_timeout_user(context['user_id'], context['time'], 48)
 
         # 新的一天
         if date.fromtimestamp(context['time']) != today_date:
@@ -88,7 +90,6 @@ def handle_msg(context):
             msg = ""
             index = 1
             for person in waken_list_sorted:
-                remove_timeout_user(person[0])
                 waken_time = datetime.fromtimestamp(person[1]['time'])
                 waken_date = date.fromtimestamp(person[1]['time'])
                 if waken_date == today_date:
