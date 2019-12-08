@@ -27,6 +27,7 @@ def remove_timeout_user(user_id, now, hour=12):
         return
 
     waken_time = datetime.fromtimestamp(waken_list[user_id]['time'])
+    now = datetime.fromtimestamp(now)
     duration = now - waken_time
     if duration > timedelta(hours=hour):
         del waken_list[user_id]
