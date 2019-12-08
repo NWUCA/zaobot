@@ -1,12 +1,12 @@
 name: Python application
 
-on: [push]
+on:
+  push:
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python 3.7
@@ -28,3 +28,14 @@ jobs:
       run: |
         pip install pytest
         pytest
+  deploy:
+    needs: build
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Deploy to test server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.host }}
+        username: root
+        key: ${{ secrets.key }}
+        script: cd zaobot/zaobot && git pull
