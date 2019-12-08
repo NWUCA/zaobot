@@ -158,4 +158,4 @@ def flush_handler(context):
     return {'reply': "清除数据成功。"}
 
 if __name__ == "__main__":
-    bot.run(host='0.0.0.0', port=8080)
+    bot.run(host='0.0.0.0', port=8080, debug=True)
