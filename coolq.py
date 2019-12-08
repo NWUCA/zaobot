@@ -2,6 +2,7 @@ from cqhttp import CQHttp
 import re
 from datetime import datetime, time, date, timedelta
 import json
+import random
 
 bot = CQHttp(api_root='http://127.0.0.1:5700/')
 
@@ -32,7 +33,7 @@ def remove_timeout_user(user_id, now, hour=12):
     if duration > timedelta(hours=hour):
         del waken_list[user_id]
 
-    
+
 @bot.on_message()
 def handle_msg(context):
     global today_date, waken_num, repeat_mode
@@ -102,12 +103,22 @@ def handle_msg(context):
 
         elif command == 'flush':
             return flush_handler(context)
-        
+
         elif command == 'fudu':
             return fudu_handler(context)
 
         elif command == 'save':
             return save_handler(context)
+
+        elif command == 'ask':
+            try:
+                question = args[0]
+            except IndexError:
+                return reply("说一个二元问题(´・ω・`)")
+            if random.randrange(2) == 1:
+                return reply("Yes")
+            else:
+                return reply("No")
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
@@ -115,16 +126,18 @@ def handle_msg(context):
     elif repeat_mode:
         return {'reply': context['message'], 'at_sender': False}
 
+
 class admin_required():
     def __init__(self, func):
         self.func = func
 
     def __call__(self, *args, **kwargs):
         if args[0].get('group_id') == 102334415 \
-            and (args[0]['sender'].get('role') == 'owner' or args[0]['sender'].get('role') == 'admin'):
+                and (args[0]['sender'].get('role') == 'owner' or args[0]['sender'].get('role') == 'admin'):
             return self.func(*args, **kwargs)
         else:
             return reply("你没有权限o(≧口≦)o")
+
 
 @admin_required
 def fudu_handler(context):
@@ -135,6 +148,7 @@ def fudu_handler(context):
     else:
         repeat_mode = 0
         return {'reply': "复读模式已关闭～(　TロT)σ"}
+
 
 @admin_required
 def save_handler(context):
@@ -147,6 +161,7 @@ def save_handler(context):
     except IOError as e:
         return reply(e)
 
+
 @admin_required
 def flush_handler(context):
     if context['user_id'] == 617175214:
@@ -157,6 +172,7 @@ def flush_handler(context):
     repeat_mode = 0
     today_date = date.today()
     return {'reply': "清除数据成功。"}
+
 
 if __name__ == "__main__":
     bot.run(host='0.0.0.0', port=8080, debug=True)
