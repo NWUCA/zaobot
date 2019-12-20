@@ -22,8 +22,8 @@ except IOError:
     waken_list = {}
 
 
-def reply(msg):
-    return {'reply': msg}
+def reply(msg, at_sender=True):
+    return {'reply': msg, 'at_sender': at_sender}
 
 
 def remove_timeout_user(user_id, now, hour=12):
@@ -137,7 +137,7 @@ def handle_msg(context):
             total_length = r.llen('secrets')
             rand = random.randrange(total_length)
             secret = r.lrange('secrets', rand, rand)[0]
-            return reply("某个人说：" + secret)
+            return reply("某个人说：" + secret, False)
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
