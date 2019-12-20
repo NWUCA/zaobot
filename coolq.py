@@ -1,8 +1,11 @@
 from cqhttp import CQHttp
 import re
-from datetime import datetime, time, date, timedelta
+from datetime import datetime, date, timedelta
 import json
 import random
+import redis
+
+r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 bot = CQHttp(api_root='http://127.0.0.1:5700/')
 
@@ -119,6 +122,22 @@ def handle_msg(context):
                 return reply("Yes")
             else:
                 return reply("No")
+
+        elif command == 'say':
+            try:
+                args[0]
+            except:
+                return reply("你必须说点什么。")
+
+            secret = " ".join(args)
+            r.lpush('secrets', secret)
+            return reply("我记在脑子里啦！")
+
+        elif command == 'dig':
+            total_length = r.llen('secrets')
+            rand = random.randrange(total_length)
+            secret = r.lrange('secrets', rand, rand)[0]
+            return reply("某个人说：" + secret)
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
