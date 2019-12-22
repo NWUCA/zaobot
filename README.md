@@ -9,5 +9,5 @@ See the reference project before.
 
 ## TO DO
 * [ ] Dockerize
-* [ ] Use CI to automate deployment
+* [x] Use CI to automate deployment
 * [ ] Log

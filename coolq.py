@@ -140,7 +140,8 @@ def handle_msg(context):
         #     return reply("某个人说：" + secret, False)
 
         else:
-            return {'reply': '听不懂<(=－︿－=)>'}
+            pass
+            # return {'reply': '听不懂<(=－︿－=)>'}
 
     elif repeat_mode:
         return {'reply': context['message'], 'at_sender': False}
