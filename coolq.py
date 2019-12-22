@@ -133,11 +133,11 @@ def handle_msg(context):
             r.lpush('secrets', secret)
             return reply("我记在脑子里啦！")
 
-        elif command == 'dig':
-            total_length = r.llen('secrets')
-            rand = random.randrange(total_length)
-            secret = r.lrange('secrets', rand, rand)[0]
-            return reply("某个人说：" + secret, False)
+        # elif command == 'dig':
+        #     total_length = r.llen('secrets')
+        #     rand = random.randrange(total_length)
+        #     secret = r.lrange('secrets', rand, rand)[0]
+        #     return reply("某个人说：" + secret, False)
 
         else:
             return {'reply': '听不懂<(=－︿－=)>'}
