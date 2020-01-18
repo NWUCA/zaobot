@@ -129,3 +129,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 docker-compose.yml
+database.dv
+database.db
+database.db-journal

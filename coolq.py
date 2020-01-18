@@ -1,25 +1,19 @@
 from cqhttp import CQHttp
 import re
 from datetime import datetime, date, timedelta
-import json
 import random
-import redis
-
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+import sqlite3
+import init
 
 bot = CQHttp(api_root='http://127.0.0.1:5700/')
+conn = sqlite3.connect('database.db')
+c = conn.cursor()
 
 today_date = date.today()
 repeat_mode = 0
+waken_num = init.init_waken_num()
 
-try:
-    with open('waken_list.json', 'r') as f:
-        waken_list = json.load(f)
-    with open('waken_num.json', 'r') as f:
-        waken_num = json.load(f)
-except IOError:
-    waken_num = 0
-    waken_list = {}
+init.init_database()
 
 
 def reply(msg, at_sender=True):
@@ -27,14 +21,16 @@ def reply(msg, at_sender=True):
 
 
 def remove_timeout_user(user_id, now, hour=12):
-    if waken_list.get(user_id) is None:
+    c.execute(f'select wake_timestamp from waken_list where id ={user_id}')
+    res = c.fetchone()  # res 为一个元组
+    if res is None:
         return
 
-    waken_time = datetime.fromtimestamp(waken_list[user_id]['time'])
+    waken_time = datetime.fromtimestamp(res[0])
     now = datetime.fromtimestamp(now)
     duration = now - waken_time
     if duration > timedelta(hours=hour):
-        del waken_list[user_id]
+        c.execute(f'delete from waken_list where id ={user_id}')
 
 
 @bot.on_message()
@@ -45,6 +41,8 @@ def handle_msg(context):
         message = message.split()
         command = message[0]
         args = message[1:]
+
+        log(context)
 
         remove_timeout_user(context['user_id'], context['time'], 48)
 
@@ -59,13 +57,15 @@ def handle_msg(context):
         elif command == 'zao':
             remove_timeout_user(context['user_id'], context['time'])
 
-            if waken_list.get(context['user_id']) is None:
-                waken_list[context['user_id']] = {'time': context['time']}
-                if context['sender'].get('card') is None:
-                    waken_list[context['user_id']]['nickname'] = context['sender']['nickname']
-                else:
-                    waken_list[context['user_id']]['nickname'] = context['sender']['card']
+            c.execute(f'select * from waken_list where id ={context["user_id"]}')
+            res = c.fetchone()
+            if res is None:
                 waken_num += 1
+                wake_timestamp = context['time']
+                wake_time = datetime.fromtimestamp(context['time'])
+                c.execute(f"insert into waken_list values "
+                          f"({context['user_id']}, {wake_timestamp}, {wake_time}, "
+                          f"{get_nickname(context)}, {waken_num})")
                 # if waken_num == 1:
                 #     bot.send(context, "获得成就：早起冠军")
                 try:
@@ -77,28 +77,31 @@ def handle_msg(context):
                 return {'reply': f"你不是起床过了吗？"}
 
         elif command == 'wan':
-            if waken_list.get(context['user_id']) is None:
+            c.execute(f'select wake_timestamp from waken_list where id ={context["user_id"]}')
+            res = c.fetchone()
+            if res is None:
                 return {'reply': 'Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～'}
             sleep_time = datetime.fromtimestamp(context['time'])
-            wake_time = datetime.fromtimestamp(waken_list[context['user_id']]['time'])
+            wake_time = datetime.fromtimestamp(res[0])
             duration = sleep_time - wake_time
             if duration < timedelta(minutes=30):
                 return reply("你不是才起床吗？")
             else:
-                del waken_list[context['user_id']]
+                c.execute(f"delete from waken_list where id ={context['user_id']}")
                 return {'reply': '今日共清醒{}秒，辛苦了'.format(
                     str(duration).replace(':', '小时', 1).replace(':', '分', 1)
                 )}
 
         elif command == 'zaoguys':
-            waken_list_sorted = sorted(waken_list.items(), key=lambda value: value[1]['time'])
+            c.execute(f'select nickname, wake_timestamp from waken_list')
+            waken_list = c.fetchall()
             msg = ""
             index = 1
-            for person in waken_list_sorted:
-                waken_time = datetime.fromtimestamp(person[1]['time'])
-                waken_date = date.fromtimestamp(person[1]['time'])
+            for person in waken_list:
+                waken_time = datetime.fromtimestamp(person[1])
+                waken_date = date.fromtimestamp(person[1])
                 if waken_date == today_date:
-                    msg += f"\n{index}. {person[1]['nickname']}, {waken_time.hour:02d}:{waken_time.minute:02d}"
+                    msg += f"\n{index}. {person[0]}, {waken_time.hour:02d}:{waken_time.minute:02d}"
                     index += 1
             if msg == "":
                 return {'reply': 'o<<(≧口≦)>>o 还没人起床'}
@@ -109,9 +112,6 @@ def handle_msg(context):
 
         elif command == 'fudu':
             return fudu_handler(context)
-
-        elif command == 'save':
-            return save_handler(context)
 
         elif command == 'ask':
             try:
@@ -130,7 +130,10 @@ def handle_msg(context):
                 return reply("你必须说点什么。")
 
             secret = " ".join(args)
-            r.lpush('secrets', secret)
+            timestamp = context['time']
+            time = datetime.fromtimestamp(timestamp)
+            c.execute(f"insert into treehole values "
+                      f"{secret}, {timestamp}, {time}, {get_nickname(context)}, {context['user_id']})")
             return reply("我记在脑子里啦！")
 
         # elif command == 'dig':
@@ -147,7 +150,7 @@ def handle_msg(context):
         return {'reply': context['message'], 'at_sender': False}
 
 
-class admin_required():
+class admin_required:
     def __init__(self, func):
         self.func = func
 
@@ -171,27 +174,29 @@ def fudu_handler(context):
 
 
 @admin_required
-def save_handler(context):
-    try:
-        with open('waken_list.json', 'w') as f:
-            json.dump(waken_list, f)
-        with open('waken_num.json', 'w') as f:
-            json.dump(waken_num, f)
-        return reply("持久化数据成功。")
-    except IOError as e:
-        return reply(e)
-
-
-@admin_required
 def flush_handler(context):
     if context['user_id'] == 617175214:
         return reply("狗滑稽又来删库了(╯°Д°)╯︵ ┻━┻")
     global today_date, waken_num, repeat_mode
-    waken_list.clear()
+    c.execute("delete from waken_list")
     waken_num = 0
     repeat_mode = 0
     today_date = date.today()
     return {'reply': "清除数据成功。"}
+
+
+def log(context):
+    time = datetime.fromtimestamp(context['time'])
+    inserted_data = (context['message'], get_nickname(context),
+                     context['user_id'], context['time'], str(time))
+    c.execute("insert into log values (?,?,?,?,?)", inserted_data)
+
+
+def get_nickname(context):
+    if context['sender'].get('card') is None:
+        return context['sender']['nickname']
+    else:
+        return context['sender']['card']
 
 
 if __name__ == "__main__":
