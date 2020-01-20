@@ -17,6 +17,9 @@ init.init_database()
 
 
 def reply(msg, at_sender=True):
+    now = datetime.now().timestamp()
+    # 构造log所需的context
+    log({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
     return {'reply': msg, 'at_sender': at_sender}
 
 
