@@ -1,10 +1,7 @@
-import sqlite3
 from datetime import date
 
-conn = sqlite3.connect("database.db")
-c = conn.cursor()
-
-def init_database():
+def init_database(cursor):
+    c = cursor
     c.execute("select * from sqlite_master where type='table' and name='waken_list'")
     if c.fetchall() == []:
         print("Initialing database")
@@ -36,7 +33,8 @@ def init_database():
         sender_id integer)
         ''')
 
-def init_waken_num():
+def init_waken_num(cursor):
+    c = cursor
     today_date = date.today()
     c.execute("SELECT wake_timestamp, waken_num FROM waken_list ORDER BY wake_timestamp DESC LIMIT 1")
     res = c.fetchone()

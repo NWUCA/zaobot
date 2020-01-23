@@ -9,11 +9,11 @@ bot = CQHttp(api_root='http://127.0.0.1:5700/')
 conn = sqlite3.connect('database.db')
 c = conn.cursor()
 
+init.init_database(c)
+
 today_date = date.today()
 repeat_mode = 0
-waken_num = init.init_waken_num()
-
-init.init_database()
+waken_num = init.init_waken_num(c)
 
 
 def reply(msg, at_sender=True):
@@ -55,7 +55,7 @@ def handle_msg(context):
             waken_num = 0
 
         if command == 'help':
-            return {'reply': '我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。'}
+            return reply('我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。')
 
         elif command == 'zao':
             remove_timeout_user(context['user_id'], context['time'])
@@ -66,9 +66,9 @@ def handle_msg(context):
                 waken_num += 1
                 wake_timestamp = context['time']
                 wake_time = datetime.fromtimestamp(context['time'])
-                c.execute(f"insert into waken_list values "
-                          f"({context['user_id']}, {wake_timestamp}, {wake_time}, "
-                          f"{get_nickname(context)}, {waken_num})")
+                c.execute(f"insert into waken_list values ({context['user_id']}, {wake_timestamp}, {wake_time}, {get_nickname(context)}, {waken_num})")
+                # inserted_data = (context['user_id'], wake_timestamp, wake_time, get_nickname(context), waken_num)
+                # c.execute("insert into waken_list values (?,?,?,?,?)", inserted_data)
                 # if waken_num == 1:
                 #     bot.send(context, "获得成就：早起冠军")
                 try:
