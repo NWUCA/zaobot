@@ -4,16 +4,27 @@ from datetime import datetime, date, timedelta
 import random
 import sqlite3
 import init
+from flask import g, current_app
 
-bot = CQHttp(api_root='http://127.0.0.1:5700/')
-conn = sqlite3.connect('database.db')
-c = conn.cursor()
 
-init.init_database(c)
+def create_app(config=None):
+    bot = CQHttp(api_root='http://127.0.0.1:5700/')
+    app = bot.server_app
+    app.config.from_mapping(
+        DATABASE='database.db'
+    )
+    if config:
+        # load the config if passed in
+        app.config.from_mapping(config)
 
-today_date = date.today()
-repeat_mode = 0
-waken_num = init.init_waken_num(c)
+    return bot
+
+
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(current_app.config['DATABASE'])
+    g.c = g.db.cursor()
+    return g.c
 
 
 def reply(msg, at_sender=True):
@@ -66,9 +77,12 @@ def handle_msg(context):
                 waken_num += 1
                 wake_timestamp = context['time']
                 wake_time = datetime.fromtimestamp(context['time'])
-                c.execute(f"insert into waken_list values ({context['user_id']}, {wake_timestamp}, {wake_time}, {get_nickname(context)}, {waken_num})")
-                # inserted_data = (context['user_id'], wake_timestamp, wake_time, get_nickname(context), waken_num)
-                # c.execute("insert into waken_list values (?,?,?,?,?)", inserted_data)
+                # 这么写会报错 sqlite3.OperationalError: near "08": syntax error 很奇怪
+                # c.execute(f"insert into waken_list values ({context['user_id']}, {wake_timestamp}, "
+                #           f"{wake_time}, {get_nickname(context)}, {waken_num})")
+                inserted_data = (context['user_id'], wake_timestamp, wake_time, get_nickname(context), waken_num)
+                c.execute("insert into waken_list values (?,?,?,?,?)", inserted_data)
+                conn.commit()
                 # if waken_num == 1:
                 #     bot.send(context, "获得成就：早起冠军")
                 try:
@@ -137,6 +151,7 @@ def handle_msg(context):
             time = datetime.fromtimestamp(timestamp)
             c.execute(f"insert into treehole values "
                       f"{secret}, {timestamp}, {time}, {get_nickname(context)}, {context['user_id']})")
+            conn.commit()
             return reply("我记在脑子里啦！")
 
         # elif command == 'dig':
@@ -193,6 +208,7 @@ def log(context):
     inserted_data = (context['message'], get_nickname(context),
                      context['user_id'], context['time'], str(time))
     c.execute("insert into log values (?,?,?,?,?)", inserted_data)
+    conn.commit()
 
 
 def get_nickname(context):
@@ -203,4 +219,15 @@ def get_nickname(context):
 
 
 if __name__ == "__main__":
+    bot = create_app()
+
+    # Deprecated
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    init.init_database(c)
+
+    today_date = date.today()
+    repeat_mode = 0
+    waken_num = init.init_waken_num(c)
     bot.run(host='0.0.0.0', port=8080, debug=True)

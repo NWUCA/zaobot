@@ -2,6 +2,13 @@ learn.py
 .vscode
 .idea
 
+docker-compose.yml
+*.db
+
+# pycharm files
+database.dv
+database.db-journal
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -128,7 +135,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-docker-compose.yml
-database.dv
-database.db
-database.db-journal
+
