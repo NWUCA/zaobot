@@ -1,4 +1,7 @@
 from datetime import date
+import sqlite3
+from flask import g, current_app
+
 
 def init_database(cursor):
     c = cursor
@@ -17,3 +20,9 @@ def init_waken_num(cursor):
         return 0
     else:
         return res[1]
+
+
+def get_db():
+    if 'db' not in g:
+        g.db_connection = sqlite3.connect(current_app.config['DATABASE'])
+    return g.db_connection
