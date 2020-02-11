@@ -1,5 +1,6 @@
 from flask import Flask, request, abort, jsonify
 
+
 def create_app(config=None):
     app = Flask(__name__)
     app.config.from_mapping(
@@ -10,6 +11,8 @@ def create_app(config=None):
         app.config.from_mapping(config)
 
     app.route('/', methods=['POST'])(handler)
+
+    return app
 
 
 def handler():
@@ -45,4 +48,4 @@ def handler():
             response = ''
     else:
         response = ''
-    return response
+    return jsonify(response) if isinstance(response, dict) else ''

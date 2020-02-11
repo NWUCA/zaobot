@@ -3,10 +3,10 @@ import sqlite3
 from flask import g, current_app
 
 
-def init_database(cursor):
-    c = cursor
-    c.execute("select * from sqlite_master where type='table' and name='waken_list'")
-    if c.fetchall() == []:
+def init_database():
+    c = get_db()
+    res = c.execute("select * from sqlite_master where type='table' and name='waken_list'").fetchone()
+    if res is None:
         print("Initialing database")
         with open('schema.sql', 'r') as f:
             c.executescript(f.read())
@@ -25,4 +25,10 @@ def init_waken_num(cursor):
 def get_db():
     if 'db' not in g:
         g.db_connection = sqlite3.connect(current_app.config['DATABASE'])
+    # TODO use row factory
     return g.db_connection
+
+
+def close_connection():
+    if 'db' in g:
+        g.db.close()

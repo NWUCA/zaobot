@@ -1,8 +1,5 @@
-from cqhttp import CQHttp
-import re
 from datetime import datetime, date, timedelta
 import random
-import sqlite3
 from db import get_db
 from flask import g, current_app
 
@@ -150,6 +147,7 @@ class admin_required:
 
 @admin_required
 def flush(context):
+    c = get_db()
     if context['user_id'] == 617175214:
         return reply("狗滑稽又来删库了(╯°Д°)╯︵ ┻━┻")
     global today_date, waken_num, repeat_mode
