@@ -13,8 +13,7 @@ def reply(msg, at_sender=True):
 
 def remove_timeout_user(user_id, now, hour=12):
     c = get_db()
-    c.execute(f'select wake_timestamp from waken_list where id ={user_id}')
-    res = c.fetchone()  # res 为一个元组
+    res = c.execute(f'select wake_timestamp from waken_list where id ={user_id}').fetchone() # res 为一个元组
     if res is None:
         return
 
@@ -38,8 +37,7 @@ def zao(context, args):
 
     remove_timeout_user(context['user_id'], context['time'])
 
-    c.execute(f'select * from waken_list where id ={context["user_id"]}')
-    res = c.fetchone()
+    res = c.execute(f'select * from waken_list where id ={context["user_id"]}').fetchone()
     if res is None:
         waken_num += 1
         wake_timestamp = context['time']
@@ -63,8 +61,7 @@ def zao(context, args):
 
 def wan(context, args):
     c = get_db()
-    c.execute(f'select wake_timestamp from waken_list where id ={context["user_id"]}')
-    res = c.fetchone()
+    res = c.execute(f'select wake_timestamp from waken_list where id ={context["user_id"]}').fetchone()
     if res is None:
         return {'reply': 'Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～'}
     sleep_time = datetime.fromtimestamp(context['time'])

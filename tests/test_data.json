@@ -4,6 +4,7 @@
         "sender": {
             "nickname": "user"
         },
+        "post_type": "message",
         "time": 1575158400,
         "time_comment": "2019.12.1 8:00:00",
         "user_id": 100
@@ -14,6 +15,7 @@
             "nickname": "user"
         },
         "time": 1575159600,
+        "post_type": "message",
         "time_comment": "2019.12.1 8:20:00",
         "user_id": 100
     },
@@ -22,6 +24,17 @@
         "sender": {
             "nickname": "user"
         },
+        "post_type": "message",
+        "time": 1575205200,
+        "time_comment": "2019.12.1 21:00:00",
+        "user_id": 100
+    },
+    "help": {
+        "message": "/help",
+        "sender": {
+            "nickname": "user"
+        },
+        "post_type": "message",
         "time": 1575205200,
         "time_comment": "2019.12.1 21:00:00",
         "user_id": 100

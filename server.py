@@ -12,6 +12,9 @@ def create_app(config=None):
 
     app.route('/', methods=['POST'])(handler)
 
+    import db
+    app.teardown_appcontext(db.close_db)
+
     return app
 
 
@@ -19,20 +22,20 @@ def handler():
     payload = request.json
     post_type = payload.get("post_type")
 
-    type_key = payload.get(
-        {'message': 'message_type',
-         'notice': 'notice_type',
-         'event': 'event',  # compatible with v3.x
-         'request': 'request_type',
-         'meta_event': 'meta_event_type'}.get(post_type)
-    )
-    if not type_key:
-        abort(400)
+    # type_key = payload.get(
+    #     {'message': 'message_type',
+    #      'notice': 'notice_type',
+    #      'event': 'event',  # compatible with v3.x
+    #      'request': 'request_type',
+    #      'meta_event': 'meta_event_type'}.get(post_type)
+    # )
+    # if not type_key:
+    #     abort(400)
 
     if post_type != "message":
-        return ''
+        abort(400)
 
-    from . import coolq
+    import coolq
     raw_message = payload.get("message").strip()
     if raw_message[0] == '/':
         message = raw_message[1:].split()
@@ -44,7 +47,8 @@ def handler():
             coolq.remove_timeout_user(payload['user_id'], payload['time'], 48)
 
             response = getattr(coolq, command)(payload, args)
-        except AttributeError:
+        except AttributeError as e:
+            print(e)
             response = ''
     else:
         response = ''

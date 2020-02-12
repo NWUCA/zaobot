@@ -8,8 +8,9 @@ def init_database():
     res = c.execute("select * from sqlite_master where type='table' and name='waken_list'").fetchone()
     if res is None:
         print("Initialing database")
-        with open('schema.sql', 'r') as f:
+        with current_app.open_resource('schema.sql', 'r') as f:
             c.executescript(f.read())
+        c.commit()
 
 def init_waken_num(cursor):
     c = cursor
@@ -23,12 +24,14 @@ def init_waken_num(cursor):
 
 
 def get_db():
-    if 'db' not in g:
+    if 'db_connection' not in g:
         g.db_connection = sqlite3.connect(current_app.config['DATABASE'])
     # TODO use row factory
     return g.db_connection
 
 
-def close_connection():
-    if 'db' in g:
-        g.db.close()
+def close_db(e=None):
+    db_connection = g.pop('db_connection', None)
+
+    if db_connection is not None:
+        db_connection.close()
