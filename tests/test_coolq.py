@@ -30,6 +30,20 @@ def test_zao(client, data):
     assert '第1起床' in response.json['reply']
 
 
+def test_second_zao(client):
+    data = {
+        "message": "/zao",
+        "sender": {
+            "nickname": "user"
+        },
+        "post_type": "message",
+        "time": 1575159400,
+        "time_comment": "2019.12.1 8:16:40",
+        "user_id": 101
+    }
+    response = client.post('/', json=data)
+    assert '第2起床' in response.json['reply']
+
 def test_fake_wan(client, data):
     response = client.post('/', json=data['fake_wan'])
     assert '你不是才起床吗' in response.json['reply']

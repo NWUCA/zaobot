@@ -7,7 +7,7 @@ from flask import g, current_app
 def reply(msg, at_sender=True):
     now = datetime.now().timestamp()
     # 构造log所需的context
-    # log({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
+    log({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
     return {'reply': msg, 'at_sender': at_sender}
 
 
@@ -54,16 +54,16 @@ def zao(context, args):
             greeting = args[0]
         except IndexError:
             greeting = '少年'
-        return {'reply': f"你是第{waken_num:d}起床的{greeting}。"}
+        return reply(f"你是第{waken_num:d}起床的{greeting}。")
     else:
-        return {'reply': f"你不是起床过了吗？"}
+        return reply(f"你不是起床过了吗？")
 
 
 def wan(context, args):
     c = get_db()
     res = c.execute(f'select wake_timestamp from waken_list where id ={context["user_id"]}').fetchone()
     if res is None:
-        return {'reply': 'Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～'}
+        return reply('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～')
     sleep_time = datetime.fromtimestamp(context['time'])
     wake_time = datetime.fromtimestamp(res[0])
     duration = sleep_time - wake_time
@@ -72,9 +72,9 @@ def wan(context, args):
     else:
         c.execute(f"delete from waken_list where id ={context['user_id']}")
         c.commit()
-        return {'reply': '今日共清醒{}秒，辛苦了'.format(
+        return reply('今日共清醒{}秒，辛苦了'.format(
             str(duration).replace(':', '小时', 1).replace(':', '分', 1)
-        )}
+        ))
 
 
 def zaoguys(context, args):
@@ -90,8 +90,8 @@ def zaoguys(context, args):
             msg += f"\n{index}. {person[0]}, {waken_time.hour:02d}:{waken_time.minute:02d}"
             index += 1
     if msg == "":
-        return {'reply': 'o<<(≧口≦)>>o 还没人起床'}
-    return {'reply': msg}
+        return reply('o<<(≧口≦)>>o 还没人起床')
+    return reply(msg)
 
 
 def ask(context, args):
@@ -152,7 +152,7 @@ def flush(context):
     waken_num = 0
     repeat_mode = 0
     today_date = date.today()
-    return {'reply': "清除数据成功。"}
+    return reply("清除数据成功。")
 
 
 def log(context):
