@@ -12,8 +12,7 @@ def app():
         'DATABASE': 'test.db'
     })
 
-    with app.app_context():
-        init_database()
+    init_database(app)
 
     yield app
 

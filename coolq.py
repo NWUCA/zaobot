@@ -13,7 +13,7 @@ def reply(msg, at_sender=True):
 
 def remove_timeout_user(user_id, now, hour=12):
     c = get_db()
-    res = c.execute(f'select wake_timestamp from waken_list where id ={user_id}').fetchone() # res 为一个元组
+    res = c.execute(f'select wake_timestamp from rest_record where id ={user_id}').fetchone()  # res 为一个元组
     if res is None:
         return
 
@@ -21,7 +21,7 @@ def remove_timeout_user(user_id, now, hour=12):
     now = datetime.fromtimestamp(now)
     duration = now - waken_time
     if duration > timedelta(hours=hour):
-        c.execute(f'delete from waken_list where id ={user_id}')
+        c.execute(f'delete from rest_record where id ={user_id}')
 
 
 def help(context, args):
@@ -30,26 +30,30 @@ def help(context, args):
 
 def zao(context, args):
     c = get_db()
-    # 新的一天
-    if date.fromtimestamp(context['time']) != date.today():
-        today_date = date.fromtimestamp(context['time'])
-        waken_num = 0
 
-    remove_timeout_user(context['user_id'], context['time'])
+    today = date.fromtimestamp(context['time'])
 
-    res = c.execute(f'select * from waken_list where id ={context["user_id"]}').fetchone()
-    if res is None:
-        waken_num += 1
+    # remove_timeout_user(context['user_id'], context['time'])
+
+    current_user = c.execute(
+        f'select * from rest_record where id = {context["user_id"]} and wake_time like {str(today)+"%"} ').fetchone()
+    if current_user is None or date.fromtimestamp(current_user['wake_timestamp']) != today:
+        last_user = c.execute(
+            "SELECT wake_timestamp, waken_num FROM rest_record ORDER BY wake_timestamp DESC LIMIT 1").fetchone()
+        if last_user is None or date.fromtimestamp(last_user['wake_timestamp']) != today:
+            # 新的一天
+            waken_num = 1
+        else:
+            waken_num = last_user['waken_num'] + 1
         wake_timestamp = context['time']
         wake_time = datetime.fromtimestamp(context['time'])
         # 这么写会报错 sqlite3.OperationalError: near "08": syntax error 很奇怪
-        # c.execute(f"insert into waken_list values ({context['user_id']}, {wake_timestamp}, "
+        # c.execute(f"insert into rest_record values ({context['user_id']}, {wake_timestamp}, "
         #           f"{wake_time}, {get_nickname(context)}, {waken_num})")
-        inserted_data = (context['user_id'], wake_timestamp, wake_time, get_nickname(context), waken_num)
-        c.execute("insert into waken_list values (?,?,?,?,?)", inserted_data)
+        inserted_data = (
+            context['user_id'], wake_timestamp, wake_time, get_nickname(context), waken_num, '', '')  # 注意顺序
+        c.execute("insert into rest_record values (?,?,?,?,?,?,?)", inserted_data)
         c.commit()
-        # if waken_num == 1:
-        #     bot.send(context, "获得成就：早起冠军")
         try:
             greeting = args[0]
         except IndexError:
@@ -61,8 +65,8 @@ def zao(context, args):
 
 def wan(context, args):
     c = get_db()
-    res = c.execute(f'select wake_timestamp from waken_list where id ={context["user_id"]}').fetchone()
-    if res is None:
+    res = c.execute(f'select wake_timestamp from rest_record where id ={context["user_id"]}').fetchone()
+    if res is None: # TODO Bug
         return reply('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～')
     sleep_time = datetime.fromtimestamp(context['time'])
     wake_time = datetime.fromtimestamp(res[0])
@@ -70,7 +74,9 @@ def wan(context, args):
     if duration < timedelta(minutes=30):
         return reply("你不是才起床吗？")
     else:
-        c.execute(f"delete from waken_list where id ={context['user_id']}")
+        c.execute(
+            "update rest_record set sleep_timestamp = ?, sleep_time = ?"
+            "where id = ?", (context['time'], sleep_time, context['user_id'])) # 还是有莫名的报错 需改成转义形式
         c.commit()
         return reply('今日共清醒{}秒，辛苦了'.format(
             str(duration).replace(':', '小时', 1).replace(':', '分', 1)
@@ -79,16 +85,15 @@ def wan(context, args):
 
 def zaoguys(context, args):
     c = get_db()
-    c.execute(f'select nickname, wake_timestamp from waken_list')
-    waken_list = c.fetchall()
+    today = date.fromtimestamp(context['time'])
+    zao_list = c.execute(
+        f'select nickname, wake_timestamp from rest_record where wake_time like {str(today)+"%"}').fetchall()
     msg = ""
     index = 1
-    for person in waken_list:
-        waken_time = datetime.fromtimestamp(person[1])
-        waken_date = date.fromtimestamp(person[1])
-        if waken_date == today_date:
-            msg += f"\n{index}. {person[0]}, {waken_time.hour:02d}:{waken_time.minute:02d}"
-            index += 1
+    for person in zao_list:
+        waken_time = datetime.fromtimestamp(person['wake_timestamp'])
+        msg += f"\n{index}. {person[0]}, {waken_time.hour:02d}:{waken_time.minute:02d}"
+        index += 1
     if msg == "":
         return reply('o<<(≧口≦)>>o 还没人起床')
     return reply(msg)
@@ -143,16 +148,10 @@ class admin_required:
 
 
 @admin_required
-def flush(context):
+def flush(context, args):
     c = get_db()
-    if context['user_id'] == 617175214:
-        return reply("狗滑稽又来删库了(╯°Д°)╯︵ ┻━┻")
-    global today_date, waken_num, repeat_mode
-    c.execute("delete from waken_list")
-    waken_num = 0
-    repeat_mode = 0
-    today_date = date.today()
-    return reply("清除数据成功。")
+    # c.execute("delete from rest_record")
+    return reply("清除数据成功。\n（我骗你的）")
 
 
 def log(context):
@@ -169,4 +168,3 @@ def get_nickname(context):
         return context['sender']['nickname']
     else:
         return context['sender']['card']
-

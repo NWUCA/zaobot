@@ -1,17 +1,12 @@
-create table waken_list
+create table rest_record
 (
-    id             integer primary key,
-    wake_timestamp integer,
-    wake_time      text,
-    nickname       text,
-    waken_num      integer
-);
-
-create table wake_history
-(
-    id         integer,
-    wake_time  text,
-    sleep_time text
+    id              integer primary key,
+    wake_timestamp  integer,
+    wake_time       text,
+    nickname        text,
+    waken_num       integer,
+    sleep_timestamp integer,
+    sleep_time      text
 );
 
 create table log

@@ -1,5 +1,5 @@
 from flask import Flask, request, abort, jsonify
-
+import db
 
 def create_app(config=None):
     app = Flask(__name__)
@@ -10,9 +10,10 @@ def create_app(config=None):
         # load the config if passed in
         app.config.from_mapping(config)
 
+    db.init_database(app)
+
     app.route('/', methods=['POST'])(handler)
 
-    import db
     app.teardown_appcontext(db.close_db)
 
     return app
