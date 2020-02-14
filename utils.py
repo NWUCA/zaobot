@@ -63,14 +63,15 @@ def average_rest_time(valid_record: list, delta: int) -> str:
     rest_time = timedelta()
     for i in record:
         wake_time = datetime.fromtimestamp(i['wake_timestamp']).replace(2020, 1, 1)
-        wake_timedelta += wake_time - datetime(2020, 1, 1)
         sleep_time = datetime.fromtimestamp(i['sleep_timestamp'])
+        rest_time += timedelta(hours=24) - (sleep_time - wake_time) # rest_time 在日期被替换之前计算
+        wake_timedelta += wake_time - datetime(2020, 1, 1)
         if sleep_time.hour < 12:
             sleep_time = sleep_time.replace(2020, 1, 2)
         else:
             sleep_time = sleep_time.replace(2020, 1, 1)
         sleep_timedelta += sleep_time - datetime(2020, 1, 2)
-        rest_time += timedelta(hours=24) - (sleep_time - wake_time)
+
     avg_wake_time = (datetime(2020, 1, 1) + wake_timedelta / length).time().isoformat()
     avg_sleep_time = (datetime(2020, 1, 2) + sleep_timedelta / length).time().isoformat()
     avg_rest_time = int((rest_time / length).total_seconds() / 60)  # 单位为分钟
