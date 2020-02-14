@@ -120,3 +120,8 @@ def test_log(app):
         for i in log:
             print(tuple(i))
         assert len(log) > 0
+
+
+def test_say(client):
+    assert "你必须说点什么" in send(client, 'say')
+    assert "我记在脑子里啦" in send(client, 'say anything')

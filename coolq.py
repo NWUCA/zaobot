@@ -11,6 +11,7 @@ def reply(msg, at_sender=True):
     return {'reply': msg, 'at_sender': at_sender}
 
 
+# Deprecated
 def remove_timeout_user(user_id, now, hour=12):
     c = get_db()
     res = c.execute(f'select wake_timestamp from rest_record where id ={user_id}').fetchone()  # res 为一个元组
@@ -121,10 +122,22 @@ def say(context, args):
     secret = " ".join(args)
     timestamp = context['time']
     time = datetime.fromtimestamp(timestamp)
-    c.execute(f"insert into treehole values "
-              f"{secret}, {timestamp}, {time}, {get_nickname(context)}, {context['user_id']})")
+    c.execute(f"insert into treehole values (?,?,?,?,?)",
+              (secret, timestamp, time, get_nickname(context), context['user_id']))
     c.commit()
     return reply("我记在脑子里啦！")
+
+
+def backdoor(context, args):
+    c = get_db()
+    msg = ""
+    try:
+        res = c.execute(f"select * from treehole where timestamp = {args[0]}").fetchall()
+        for i in res:
+            msg += str(tuple(i))  + '\n'
+    except IndexError:
+        pass
+    return reply(msg)
 
 
 def dig():
