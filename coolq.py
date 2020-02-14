@@ -1,28 +1,7 @@
-from datetime import datetime, date, timedelta
 import random
-from db import get_db
 from flask import g, current_app
-
-
-def reply(msg, at_sender=True):
-    now = datetime.now().timestamp()
-    # 构造log所需的context
-    log({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
-    return {'reply': msg, 'at_sender': at_sender}
-
-
-# Deprecated
-def remove_timeout_user(user_id, now, hour=12):
-    c = get_db()
-    res = c.execute(f'select wake_timestamp from rest_record where id ={user_id}').fetchone()  # res 为一个元组
-    if res is None:
-        return
-
-    waken_time = datetime.fromtimestamp(res[0])
-    now = datetime.fromtimestamp(now)
-    duration = now - waken_time
-    if duration > timedelta(hours=hour):
-        c.execute(f'delete from rest_record where id ={user_id}')
+from datetime import date
+from utils import *
 
 
 def help(context, args):
@@ -67,7 +46,7 @@ def wan(context, args):
                              f'where id ={context["user_id"]} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
     current_time = datetime.fromtimestamp(context['time'])
     if current_user is None \
-            or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=36):
+            or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=24):
         return reply('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～')
 
     wake_time = datetime.fromtimestamp(current_user['wake_timestamp'])
@@ -148,36 +127,20 @@ def dig():
     return reply("")
 
 
-class admin_required:
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, *args, **kwargs):
-        if args[0].get('group_id') == 102334415 \
-                and (args[0]['sender'].get('role') == 'owner' or args[0]['sender'].get('role') == 'admin'):
-            return self.func(*args, **kwargs)
-        else:
-            return reply("你没有权限o(≧口≦)o")
-
-
 @admin_required
 def flush(context, args):
-    c = get_db()
+    # c = get_db()
     # c.execute("delete from rest_record")
-    return reply("清除数据成功。\n（我骗你的）")
+    return reply("清除数据成功。")
 
 
-def log(context):
+def rest_statistic(context, args):
+    if context['message_type'] != 'private':
+        return reply("请私聊我获得作息统计。")
+
     c = get_db()
-    time = datetime.fromtimestamp(context['time'])
-    inserted_data = (context['message'], get_nickname(context),
-                     context['user_id'], context['time'], str(time))
-    c.execute("insert into log values (?,?,?,?,?)", inserted_data)
-    c.commit()
-
-
-def get_nickname(context):
-    if context['sender'].get('card') is None:
-        return context['sender']['nickname']
-    else:
-        return context['sender']['card']
+    rest_list = c.execute('select * from rest_record where id = ?', (context["user_id"],)).fetchall()
+    valid_record = [i for i in rest_list if i['sleep_time'] != '']
+    return reply(average_rest_time(valid_record, 7) +
+                 average_rest_time(valid_record, 30) +
+                 average_rest_time(valid_record, 365))
