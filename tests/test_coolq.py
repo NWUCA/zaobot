@@ -13,7 +13,8 @@ def data_generator(
         time: datetime.isoformat = '2019-01-01 00:08:00',
         role: str = 'member',
         card: str = 'test_card',
-        nickname: str = 'test_nickname'
+        nickname: str = 'test_nickname',
+        message_type: str = 'group'
 ):
     message = "/" + message
     timestamp = datetime.fromisoformat(time).timestamp()
@@ -23,7 +24,7 @@ def data_generator(
         "group_id": 102334415,
         "message": message,
         "message_id": 1,
-        "message_type": "group",
+        "message_type": message_type,
         "post_type": "message",
         "raw_message": message,
         "self_id": 0,
@@ -125,3 +126,9 @@ def test_log(app):
 def test_say(client):
     assert "你必须说点什么" in send(client, 'say')
     assert "我记在脑子里啦" in send(client, 'say anything')
+
+
+def test_rest_statistic(client):
+    response = send(client, 'rest_statistic', message_type='private')
+    print(response)
+    assert "平均" in response

@@ -141,6 +141,10 @@ def rest_statistic(context, args):
     c = get_db()
     rest_list = c.execute('select * from rest_record where id = ?', (context["user_id"],)).fetchall()
     valid_record = [i for i in rest_list if i['sleep_time'] != '']
-    return reply(average_rest_time(valid_record, 7) +
-                 average_rest_time(valid_record, 30) +
-                 average_rest_time(valid_record, 365))
+    msg = average_rest_time(valid_record, 7) + \
+          average_rest_time(valid_record, 30) + \
+          average_rest_time(valid_record, 365)
+    if msg == "":
+        return reply("暂无数据。")
+    else:
+        return reply(msg)

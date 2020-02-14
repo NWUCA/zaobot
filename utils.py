@@ -52,9 +52,12 @@ class admin_required:
 
 
 def average_rest_time(valid_record: list, delta: int) -> str:
-    now = datetime.now()
+    now = datetime.now().timestamp()
     record = [i for i in valid_record
               if timedelta(seconds=now - i['sleep_timestamp']) < timedelta(days=delta)]
+    length = len(record)
+    if length == 0:
+        return ""
     wake_timedelta = timedelta()
     sleep_timedelta = timedelta()
     rest_time = timedelta()
@@ -63,14 +66,13 @@ def average_rest_time(valid_record: list, delta: int) -> str:
         wake_timedelta += wake_time - datetime(2020, 1, 1)
         sleep_time = datetime.fromtimestamp(i['sleep_timestamp'])
         if sleep_time.hour < 12:
-            sleep_time.replace(2020, 1, 2)
+            sleep_time = sleep_time.replace(2020, 1, 2)
         else:
-            sleep_time.replace(2020, 1, 1)
+            sleep_time = sleep_time.replace(2020, 1, 1)
         sleep_timedelta += sleep_time - datetime(2020, 1, 2)
         rest_time += timedelta(hours=24) - (sleep_time - wake_time)
-    length = len(record)
     avg_wake_time = (datetime(2020, 1, 1) + wake_timedelta / length).time().isoformat()
     avg_sleep_time = (datetime(2020, 1, 2) + sleep_timedelta / length).time().isoformat()
     avg_rest_time = int((rest_time / length).total_seconds() / 60)  # 单位为分钟
-    avg_rest_time = f"{avg_rest_time // 60}:{avg_rest_time % 60}"
+    avg_rest_time = f"{avg_rest_time // 60}小时{avg_rest_time % 60}分钟"
     return f"近{delta}天的平均入睡时间为{avg_sleep_time}, 平均起床时间为{avg_wake_time}, 平均睡眠时长为{avg_rest_time}。\n"
