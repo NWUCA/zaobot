@@ -45,7 +45,6 @@ def handler():
         try:
             # public operation
             coolq.log(payload)
-            coolq.remove_timeout_user(payload['user_id'], payload['time'], 48)
 
             response = getattr(coolq, command)(payload, args)
         except AttributeError as e:

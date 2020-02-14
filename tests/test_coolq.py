@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, time, date, timedelta
+from datetime import datetime, date, timedelta
 import sqlite3
 import os
 import json
@@ -16,7 +16,7 @@ def data_generator(
         nickname: str = 'test_nickname'
 ):
     message = "/" + message
-    time = datetime.fromisoformat(time).timestamp()
+    timestamp = datetime.fromisoformat(time).timestamp()
     data = {
         "anonymous": "None",
         "font": 1591808,
@@ -39,10 +39,15 @@ def data_generator(
             "user_id": user_id
         },
         "sub_type": "normal",
-        "time": time,
+        "time": timestamp,
         "user_id": user_id
     }
     return data
+
+
+def send(client, *args, **kwargs):
+    response = client.post('/', json=data_generator(*args, **kwargs))
+    return response.json['reply']
 
 
 def test_get_close_db(app):
@@ -77,7 +82,7 @@ def test_zao_db(app):
 
 
 def test_second_zao(client):
-    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:00:00', user_id=101))
+    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00', user_id=101, card='no2'))
     assert '第2起床' in response.json['reply']
 
 
@@ -102,9 +107,16 @@ def test_zaoguys(client):
     assert 1
 
 
+def test_ask(client):
+    r = send(client, 'ask anything')
+    assert "Yes" in r or "No" in r
+    assert "说一个二元问题" in send(client, 'ask')
+
+
 def test_log(app):
     with app.app_context():
         c = get_db()
         log = c.execute('select * from log').fetchall()
-        pprint(log)
+        for i in log:
+            print(tuple(i))
         assert len(log) > 0

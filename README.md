@@ -6,6 +6,7 @@ Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) and h
 
 ## Get started
 See the reference project above.
+And entrance file is *server.py*.
 
 ## How to contribute
 

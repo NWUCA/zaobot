@@ -33,10 +33,8 @@ def zao(context, args):
 
     today = date.fromtimestamp(context['time'])
 
-    # remove_timeout_user(context['user_id'], context['time'])
-
-    current_user = c.execute(
-        f'select * from rest_record where id = {context["user_id"]} and wake_time like {str(today)+"%"} ').fetchone()
+    current_user = c.execute('select * from rest_record where id = ? and wake_time like ?',
+                             (context["user_id"], str(today) + "%")).fetchone()
     if current_user is None or date.fromtimestamp(current_user['wake_timestamp']) != today:
         last_user = c.execute(
             "SELECT wake_timestamp, waken_num FROM rest_record ORDER BY wake_timestamp DESC LIMIT 1").fetchone()
@@ -47,9 +45,6 @@ def zao(context, args):
             waken_num = last_user['waken_num'] + 1
         wake_timestamp = context['time']
         wake_time = datetime.fromtimestamp(context['time'])
-        # 这么写会报错 sqlite3.OperationalError: near "08": syntax error 很奇怪
-        # c.execute(f"insert into rest_record values ({context['user_id']}, {wake_timestamp}, "
-        #           f"{wake_time}, {get_nickname(context)}, {waken_num})")
         inserted_data = (
             context['user_id'], wake_timestamp, wake_time, get_nickname(context), waken_num, '', '')  # 注意顺序
         c.execute("insert into rest_record values (?,?,?,?,?,?,?)", inserted_data)
@@ -59,24 +54,29 @@ def zao(context, args):
         except IndexError:
             greeting = '少年'
         return reply(f"你是第{waken_num:d}起床的{greeting}。")
+    elif current_user['sleep_timestamp'] != '':
+        return reply("你不是睡了吗？")
     else:
         return reply(f"你不是起床过了吗？")
 
 
 def wan(context, args):
     c = get_db()
-    res = c.execute(f'select wake_timestamp from rest_record where id ={context["user_id"]}').fetchone()
-    if res is None: # TODO Bug
+    current_user = c.execute(f'select wake_timestamp from rest_record '
+                             f'where id ={context["user_id"]} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
+    current_time = datetime.fromtimestamp(context['time'])
+    if current_user is None \
+            or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=36):
         return reply('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～')
-    sleep_time = datetime.fromtimestamp(context['time'])
-    wake_time = datetime.fromtimestamp(res[0])
-    duration = sleep_time - wake_time
+
+    wake_time = datetime.fromtimestamp(current_user['wake_timestamp'])
+    duration = current_time - wake_time
     if duration < timedelta(minutes=30):
         return reply("你不是才起床吗？")
     else:
         c.execute(
             "update rest_record set sleep_timestamp = ?, sleep_time = ?"
-            "where id = ?", (context['time'], sleep_time, context['user_id'])) # 还是有莫名的报错 需改成转义形式
+            "where id = ?", (context['time'], current_time, context['user_id']))  # 还是有莫名的报错 需改成转义形式
         c.commit()
         return reply('今日共清醒{}秒，辛苦了'.format(
             str(duration).replace(':', '小时', 1).replace(':', '分', 1)
@@ -87,7 +87,7 @@ def zaoguys(context, args):
     c = get_db()
     today = date.fromtimestamp(context['time'])
     zao_list = c.execute(
-        f'select nickname, wake_timestamp from rest_record where wake_time like {str(today)+"%"}').fetchall()
+        f'select nickname, wake_timestamp from rest_record where wake_time like ?', (str(today) + "%",)).fetchall()
     msg = ""
     index = 1
     for person in zao_list:
