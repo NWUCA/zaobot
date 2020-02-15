@@ -1,6 +1,6 @@
 create table rest_record
 (
-    id              integer primary key,
+    id              integer,
     wake_timestamp  integer,
     wake_time       text,
     nickname        text,

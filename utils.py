@@ -71,7 +71,7 @@ def average_rest_time(valid_record: list, delta: int) -> str:
             sleep_time = sleep_time.replace(2020, 1, 2)
         else:
             sleep_time = sleep_time.replace(2020, 1, 1)
-        
+
         wake_timedelta += wake_time - datetime(2020, 1, 1)
         sleep_timedelta += sleep_time - datetime(2020, 1, 2)
 

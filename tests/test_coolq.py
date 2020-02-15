@@ -1,9 +1,7 @@
 import pytest
-from datetime import datetime, date, timedelta
+from datetime import datetime
 import sqlite3
-import os
-import json
-from pprint import pprint
+# from pprint import pprint
 from db import get_db
 
 
@@ -132,3 +130,9 @@ def test_rest_statistic(client):
     response = send(client, 'rest_statistic', message_type='private')
     print(response)
     assert "平均" in response
+    assert "暂无数据。" in send(client, 'rest_statistic', user_id=101, message_type='private')
+
+
+def test_zao_second_day(client):
+    assert '第1起床' in send(client, 'zao', time='2019-12-02 12:00:00')
+    assert  '第2起床' in send(client, 'zao', time='2019-12-02 12:00:00', user_id=101, card='no2')
