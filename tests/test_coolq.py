@@ -46,7 +46,10 @@ def data_generator(
 
 def send(client, *args, **kwargs):
     response = client.post('/', json=data_generator(*args, **kwargs))
-    return response.json['reply']
+    try:
+        return response.json['reply']
+    except TypeError:
+        return
 
 
 def test_get_close_db(app):
@@ -136,3 +139,21 @@ def test_log(app):
         for i in log:
             print(tuple(i))
         assert len(log) > 0
+
+
+message = ''
+def callback(request, context):
+    global message
+    message = request.json()['message']
+    return request.json()
+
+
+def test_xiuxian(client, requests_mock):
+    requests_mock.post('http://127.0.0.1:5700/', json=callback)
+
+    send(client, 'wan', time='2019-12-04 02:00:00')
+    assert '成功筑基' in message
+
+    send(client, 'anything', time='2019-12-04 04:00:00')
+    assert '突破了' in message
+    print(message)

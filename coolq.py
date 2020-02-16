@@ -42,6 +42,7 @@ def zao(context, args):
 
 def wan(context, args):
     c = get_db()
+    start_xiuxian(context)
     current_user = c.execute(f'select wake_timestamp from rest_record '
                              f'where id ={context["user_id"]} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
     current_time = datetime.fromtimestamp(context['time'])
@@ -63,7 +64,6 @@ def wan(context, args):
         ))
 
 
-
 def zaoguys(context, args):
     c = get_db()
     today = date.fromtimestamp(context['time'])
@@ -73,7 +73,7 @@ def zaoguys(context, args):
     index = 1
     for person in zao_list:
         waken_time = datetime.fromtimestamp(person['wake_timestamp'])
-        msg += f"\n{index}. {person[0]}, {waken_time.hour:02d}:{waken_time.minute:02d}"
+        msg += f"\n{index}. {person['nickname']}, {waken_time.hour:02d}:{waken_time.minute:02d}"
         index += 1
     if msg == "":
         return reply('o<<(≧口≦)>>o 还没人起床')
@@ -112,9 +112,10 @@ def backdoor(context, args):
     c = get_db()
     msg = ""
     try:
-        res = c.execute(f"select * from treehole where timestamp = {context['message']}").fetchall()
+        timestamp = context['message'].replace("/backdoor ", "")
+        res = c.execute(f"select * from treehole where timestamp = {timestamp}").fetchall()
         for i in res:
-            msg += str(tuple(i))  + '\n'
+            msg += str(tuple(i)) + '\n'
     except IndexError:
         pass
     except Exception as e:
@@ -151,3 +152,12 @@ def rest_statistic(context, args):
         return reply("暂无数据。")
     else:
         return reply(msg)
+
+
+def xiuxian_ranking(context):
+    c = get_db()
+    res = c.execute('select * from xiuxian_emulator order by exp desc limit 10').fetchall()
+    msg = ""
+    for i, person in enumerate(res):
+        msg += f"{i + 1}. {person['nickname']} {xiuxian_level[person['level']][0]}\n"
+    return reply(msg, at_sender=False)

@@ -45,6 +45,7 @@ def handler():
         try:
             # public operation
             coolq.log(payload)
+            coolq.accumulate_exp(payload)
 
             response = getattr(coolq, command)(payload, args)
         except AttributeError as e:
