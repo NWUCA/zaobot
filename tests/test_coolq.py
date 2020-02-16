@@ -157,3 +157,9 @@ def test_xiuxian(client, requests_mock):
     send(client, 'anything', time='2019-12-04 04:00:00')
     assert '突破了' in message
     print(message)
+
+
+def test_xiuxian_ranking(client):
+    response = send(client, 'xiuxian_ranking')
+    print(response)
+    assert 'test_card' in response

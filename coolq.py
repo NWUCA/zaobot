@@ -154,10 +154,13 @@ def rest_statistic(context, args):
         return reply(msg)
 
 
-def xiuxian_ranking(context):
+def xiuxian_ranking(context, args):
     c = get_db()
     res = c.execute('select * from xiuxian_emulator order by exp desc limit 10').fetchall()
+    if len(res) == 0:
+        return reply('呜呼！仙道中落，世间竟无人修仙！')
     msg = ""
     for i, person in enumerate(res):
-        msg += f"{i + 1}. {person['nickname']} {xiuxian_level[person['level']][0]}\n"
+        msg += f"{i + 1}. {person['nickname']} {xiuxian_level[person['level']][0]}期 " \
+               f"经验{person['exp']}/{xiuxian_level[person['level']][1]}\n"
     return reply(msg, at_sender=False)
