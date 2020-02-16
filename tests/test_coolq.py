@@ -112,15 +112,6 @@ def test_ask(client):
     assert "说一个二元问题" in send(client, 'ask')
 
 
-def test_log(app):
-    with app.app_context():
-        c = get_db()
-        log = c.execute('select * from log').fetchall()
-        for i in log:
-            print(tuple(i))
-        assert len(log) > 0
-
-
 def test_say(client):
     assert "你必须说点什么" in send(client, 'say')
     assert "我记在脑子里啦" in send(client, 'say anything')
@@ -136,3 +127,12 @@ def test_rest_statistic(client):
 def test_zao_second_day(client):
     assert '第1起床' in send(client, 'zao', time='2019-12-02 12:00:00')
     assert  '第2起床' in send(client, 'zao', time='2019-12-02 12:00:00', user_id=101, card='no2')
+
+
+def test_log(app):
+    with app.app_context():
+        c = get_db()
+        log = c.execute('select * from log').fetchall()
+        for i in log:
+            print(tuple(i))
+        assert len(log) > 0

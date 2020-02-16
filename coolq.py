@@ -63,6 +63,7 @@ def wan(context, args):
         ))
 
 
+
 def zaoguys(context, args):
     c = get_db()
     today = date.fromtimestamp(context['time'])
@@ -111,11 +112,13 @@ def backdoor(context, args):
     c = get_db()
     msg = ""
     try:
-        res = c.execute(f"select * from treehole where timestamp = {args[0]}").fetchall()
+        res = c.execute(f"select * from treehole where timestamp = {context['message']}").fetchall()
         for i in res:
             msg += str(tuple(i))  + '\n'
     except IndexError:
         pass
+    except Exception as e:
+        msg = str(e)
     return reply(msg)
 
 

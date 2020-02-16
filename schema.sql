@@ -25,4 +25,14 @@ create table treehole
     time            text,
     sender_nickname text,
     sender_id       integer
+);
+
+create table xiuxian_emulator
+(
+    id  integer primary key,
+    nickname text,
+    exp integer,
+    level integer,
+    last_speaking_timestamp integer,
+    last_speaking_time text
 )
