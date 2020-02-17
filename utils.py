@@ -159,7 +159,8 @@ def accumulate_exp(context):
         exp = user['exp'] + elapsed_minute
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            send(context, f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level+1][0]}期。')
+            send(context, f'@{get_nickname(context)}，'
+                          f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level+1][0]}期。')
             level += 1
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',

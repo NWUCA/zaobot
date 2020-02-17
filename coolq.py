@@ -56,8 +56,9 @@ def wan(context, args):
         return reply("你不是才起床吗？")
     else:
         c.execute(
-            "update rest_record set sleep_timestamp = ?, sleep_time = ?"
-            "where id = ?", (context['time'], current_time, context['user_id']))  # 还是有莫名的报错 需改成转义形式
+            "update rest_record set sleep_timestamp = ?, sleep_time = ? "
+            "where id = ? and wake_timestamp = ?",
+            (context['time'], current_time, context['user_id'], current_user['wake_timestamp']))
         c.commit()
         return reply('今日共清醒{}秒，辛苦了'.format(
             str(duration).replace(':', '小时', 1).replace(':', '分', 1)
