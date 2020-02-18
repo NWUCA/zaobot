@@ -102,7 +102,7 @@ def send(context, message, **kwargs):
     # TODO log
 
     import requests
-    url = 'http://127.0.0.1:5700/'
+    url = 'http://127.0.0.1:5700'
     resp = requests.post(url, json=context)
     if resp.ok:
         data = resp.json()
