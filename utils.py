@@ -102,7 +102,7 @@ def send(context, message, **kwargs):
     # TODO log
 
     import requests
-    url = 'http://127.0.0.1:5700'
+    url = 'http://127.0.0.1:5700/send_msg'
     resp = requests.post(url, json=context)
     if resp.ok:
         data = resp.json()
@@ -134,7 +134,7 @@ def start_xiuxian(context):
         c.execute('insert into xiuxian_emulator values (?,?,?,?,?,?)',
                   (context['user_id'], get_nickname(context), 0, 0, '', ''))
         c.commit()
-        send(context, '你已经成功筑基，一个新的世界已经对你敞开！')
+        send(context, f'@{get_nickname(context)}，你已经成功筑基，一个新的世界已经对你敞开！')
 
 
 def accumulate_exp(context):
