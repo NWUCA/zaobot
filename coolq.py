@@ -165,3 +165,7 @@ def xiuxian_ranking(context, args):
         msg += f"{i + 1}. {person['nickname']} {xiuxian_level[person['level']][0]}期 " \
                f"经验{person['exp']}/{xiuxian_level[person['level']][1]}\n"
     return reply(msg, at_sender=False)
+
+
+def send_test(context, args):
+    send(context, 'test')
