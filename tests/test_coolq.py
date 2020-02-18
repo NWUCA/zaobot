@@ -149,7 +149,7 @@ def callback(request, context):
 
 
 def test_xiuxian(client, requests_mock):
-    requests_mock.post('http://127.0.0.1:5700/', json=callback)
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=callback)
 
     send(client, 'wan', time='2019-12-04 02:00:00')
     assert '成功筑基' in message
