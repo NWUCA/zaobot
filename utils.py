@@ -99,7 +99,8 @@ def send(context, message, **kwargs):
             context['message_type'] = 'discuss'
         elif 'user_id' in context:
             context['message_type'] = 'private'
-    # TODO log
+
+    log({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context['time'], 'user_id': 0})
 
     import requests
     url = 'http://127.0.0.1:5700/send_msg'
@@ -135,6 +136,7 @@ def start_xiuxian(context):
                   (context['user_id'], get_nickname(context), 0, 0, '', ''))
         c.commit()
         send(context, f'@{get_nickname(context)}，你已经成功筑基，一个新的世界已经对你敞开！')
+        accumulate_exp(context)
 
 
 def accumulate_exp(context):
@@ -168,4 +170,3 @@ def accumulate_exp(context):
         if get_nickname(context) != user['nickname']:
             c.execute('update xiuxian_emulator set nickname=? where id=?', (get_nickname(context), user['id']))
         c.commit()
-

@@ -129,7 +129,7 @@ def test_rest_statistic(client):
 
 def test_zao_second_day(client):
     assert '第1起床' in send(client, 'zao', time='2019-12-02 12:00:00')
-    assert  '第2起床' in send(client, 'zao', time='2019-12-02 12:00:00', user_id=101, card='no2')
+    assert '第2起床' in send(client, 'zao', time='2019-12-02 12:00:00', user_id=101, card='no2')
 
 
 def test_log(app):
@@ -141,22 +141,25 @@ def test_log(app):
         assert len(log) > 0
 
 
-message = ''
-def callback(request, context):
-    global message
-    message = request.json()['message']
-    return request.json()
+class MessageHandler:
+    def __init__(self):
+        self.message = ''
+
+    def handler(self, request, context):
+        self.message = request.json()['message']
+        return request.json()
 
 
 def test_xiuxian(client, requests_mock):
-    requests_mock.post('http://127.0.0.1:5700/send_msg', json=callback)
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
 
-    send(client, 'wan', time='2019-12-04 02:00:00')
-    assert '成功筑基' in message
+    send(client, 'wan', time='2019-12-04 01:00:00')
+    assert '成功筑基' in r.message
 
     send(client, 'anything', time='2019-12-04 04:00:00')
-    assert '突破了' in message
-    print(message)
+    assert '突破了' in r.message
+    print(r.message)
 
 
 def test_xiuxian_ranking(client):
