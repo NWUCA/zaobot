@@ -1,13 +1,12 @@
 import pytest
 import json
-
-from server import create_app
-from db import init_database
-
 import sys
 import os
 # 不添加path会导致ModuleNotFoundError
 sys.path.append((os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))))
+
+from server import create_app
+from db import init_database
 
 
 @pytest.fixture(scope='session')
