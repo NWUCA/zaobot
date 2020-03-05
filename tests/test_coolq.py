@@ -84,7 +84,7 @@ def test_zao_db(app):
 
 
 def test_second_zao(client):
-    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00', user_id=101, card='no2'))
+    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00', user_id=101, card='no1'))
     assert '第2起床' in response.json['reply']
 
 
@@ -95,7 +95,20 @@ def test_fake_wan(client):
 
 def test_wan(client):
     response = client.post('/', json=data_generator('wan', time='2019-12-01 21:00:00'))
-    assert '13小时' in response.json['reply']
+    assert '13小时00分00秒' in response.json['reply']
+
+
+def test_wan_with_delay(client):
+    send(client, 'zao', time='2019-12-01 08:01:00', user_id=102, card='no2')
+    r = send(client, 'wan 1', time='2019-12-01 21:00:00', user_id=102, card='no2')
+    print(r)
+    assert '13小时00分00秒' in r
+
+
+def test_wan_invalid(client):
+    send(client, 'zao', time='2019-12-01 08:00:00', user_id=103, card='no3')
+    r = send(client, 'wan joke', time='2019-12-01 21:00:00', user_id=103, card='no3')
+    assert '13小时00分00秒' in r
 
 
 def test_admin(client):
@@ -129,7 +142,7 @@ def test_rest_statistic(client):
 
 def test_zao_second_day(client):
     assert '第1起床' in send(client, 'zao', time='2019-12-02 12:00:00')
-    assert '第2起床' in send(client, 'zao', time='2019-12-02 12:00:00', user_id=101, card='no2')
+    assert '第2起床' in send(client, 'zao', time='2019-12-02 12:00:00', user_id=101, card='no1')
 
 
 def test_log(app):

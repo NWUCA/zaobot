@@ -55,14 +55,22 @@ def wan(context, args):
     if duration < timedelta(minutes=30):
         return reply("你不是才起床吗？")
     else:
+        msg = ""
+        try:
+            delay_minute = int(args[0])
+            sleep_time = current_time + timedelta(minutes=delay_minute)
+            duration += timedelta(minutes=delay_minute)
+            msg += f"将在{delay_minute}分钟后睡觉。\n"
+        except (IndexError, ValueError):
+            sleep_time = current_time
+
         c.execute(
             "update rest_record set sleep_timestamp = ?, sleep_time = ? "
             "where id = ? and wake_timestamp = ?",
-            (context['time'], current_time, context['user_id'], current_user['wake_timestamp']))
+            (sleep_time.timestamp(), sleep_time, context['user_id'], current_user['wake_timestamp']))
         c.commit()
-        return reply('今日共清醒{}秒，辛苦了'.format(
-            str(duration).replace(':', '小时', 1).replace(':', '分', 1)
-        ))
+        msg += '今日共清醒{}秒，辛苦了'.format(str(duration).replace(':', '小时', 1).replace(':', '分', 1))
+        return reply(msg)
 
 
 def zaoguys(context, args):
