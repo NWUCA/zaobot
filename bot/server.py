@@ -1,6 +1,7 @@
 from flask import Flask, request, abort, jsonify
 from . import db
 import os
+from . import directive, utils
 
 
 def create_app(config=None):
@@ -39,17 +40,15 @@ def handler():
     if post_type != "message":
         abort(400)
 
-    from . import directive
+    pre_process(payload)
+
     raw_message = payload.get("message").strip()
     if raw_message[0] == '/':
         message = raw_message[1:].split()
         command = message[0]
         args = message[1:]
         try:
-            # public operation
-            directive.log(payload)
-            # coolq.accumulate_exp(payload)
-
+            # map command to directive.py and execute it.
             response = getattr(directive, command)(payload, args)
         except AttributeError as e:
             print(e)
@@ -57,3 +56,8 @@ def handler():
     else:
         response = ''
     return jsonify(response) if isinstance(response, dict) else ''
+
+
+def pre_process(payload):
+    utils.log(payload)
+    # utils.accumulate_exp(payload)

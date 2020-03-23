@@ -2,20 +2,6 @@ from .db import get_db
 from datetime import datetime, timedelta, date, time
 
 
-# Deprecated
-def remove_timeout_user(user_id, now, hour=12):
-    c = get_db()
-    res = c.execute(f'select wake_timestamp from rest_record where id ={user_id}').fetchone()  # res 为一个元组
-    if res is None:
-        return
-
-    waken_time = datetime.fromtimestamp(res[0])
-    now = datetime.fromtimestamp(now)
-    duration = now - waken_time
-    if duration > timedelta(hours=hour):
-        c.execute(f'delete from rest_record where id ={user_id}')
-
-
 def reply(msg, at_sender=True):
     now = datetime.now().timestamp()
     # 构造log所需的context
