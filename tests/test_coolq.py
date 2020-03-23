@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime
 import sqlite3
 # from pprint import pprint
-from db import get_db
+from bot.db import get_db
 
 
 def data_generator(
@@ -163,19 +163,19 @@ class MessageHandler:
         return request.json()
 
 
-def test_xiuxian(client, requests_mock):
-    r = MessageHandler()
-    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
-
-    send(client, 'wan', time='2019-12-04 01:00:00')
-    assert '成功筑基' in r.message
-
-    send(client, 'anything', time='2019-12-04 04:00:00')
-    assert '突破了' in r.message
-    print(r.message)
-
-
-def test_xiuxian_ranking(client):
-    response = send(client, 'xiuxian_ranking')
-    print(response)
-    assert 'test_card' in response
+# def test_xiuxian(client, requests_mock):
+#     r = MessageHandler()
+#     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+#
+#     send(client, 'wan', time='2019-12-04 01:00:00')
+#     assert '成功筑基' in r.message
+#
+#     send(client, 'anything', time='2019-12-04 04:00:00')
+#     assert '突破了' in r.message
+#     print(r.message)
+#
+#
+# def test_xiuxian_ranking(client):
+#     response = send(client, 'xiuxian_ranking')
+#     print(response)
+#     assert 'test_card' in response

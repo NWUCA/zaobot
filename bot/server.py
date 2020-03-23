@@ -1,15 +1,18 @@
 from flask import Flask, request, abort, jsonify
-import db
+from . import db
+import os
+
 
 def create_app(config=None):
     app = Flask(__name__)
     app.config.from_mapping(
-        DATABASE='database.db'
+        DATABASE=os.path.join(app.instance_path, 'database.db')
+        # DATABASE='database.db'
     )
     if config:
         # load the config if passed in
         app.config.from_mapping(config)
-
+    print(os.getcwd())
     db.init_database(app)
 
     app.route('/', methods=['POST'])(handler)
@@ -36,7 +39,7 @@ def handler():
     if post_type != "message":
         abort(400)
 
-    import coolq
+    from . import directive
     raw_message = payload.get("message").strip()
     if raw_message[0] == '/':
         message = raw_message[1:].split()
@@ -44,10 +47,10 @@ def handler():
         args = message[1:]
         try:
             # public operation
-            coolq.log(payload)
-            coolq.accumulate_exp(payload)
+            directive.log(payload)
+            # coolq.accumulate_exp(payload)
 
-            response = getattr(coolq, command)(payload, args)
+            response = getattr(directive, command)(payload, args)
         except AttributeError as e:
             print(e)
             response = ''

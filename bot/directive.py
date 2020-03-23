@@ -1,7 +1,7 @@
 import random
 from flask import g, current_app
 from datetime import date
-from utils import *
+from .utils import *
 
 
 def help(context, args):
@@ -42,7 +42,7 @@ def zao(context, args):
 
 def wan(context, args):
     c = get_db()
-    start_xiuxian(context)
+    # start_xiuxian(context)
     current_user = c.execute(f'select wake_timestamp from rest_record '
                              f'where id ={context["user_id"]} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
     current_time = datetime.fromtimestamp(context['time'])
