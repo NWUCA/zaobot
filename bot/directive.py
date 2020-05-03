@@ -2,7 +2,7 @@ import random
 from flask import g, current_app
 from datetime import date
 from .utils import *
-
+import requests
 
 def help(context, args):
     return reply('我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。')
@@ -177,3 +177,16 @@ def xiuxian_ranking(context, args):
 
 def send_test(context, args):
     send(context, 'test')
+
+def say_easily(context,args):
+    url='https://lab.magiconch.com/api/nbnhhsh/guess'
+    word={"text":f"{context}"}
+    what_is_it=requests.post(url,data=word)
+    if(what_is_it.status_code==200):
+        oh_it_is=eval(what_is_it.text)
+        true_mean = f"{context}缩写所对应的全称为\n"
+        for i in range(len(oh_it_is[0]['trans'])):
+            true_mean=true_mean+f"{i+1}:{oh_it_is[0]['trans'][i]}\n"
+        return reply(true_mean)
+    else:
+        return reply('请求失败, 请稍后重试')
