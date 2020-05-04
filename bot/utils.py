@@ -1,5 +1,5 @@
 from .db import get_db
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, timedelta, date
 
 
 def reply(msg, at_sender=True):
@@ -11,9 +11,9 @@ def reply(msg, at_sender=True):
 
 def log(context):
     c = get_db()
-    time = datetime.fromtimestamp(context['time'])
+    log_time = datetime.fromtimestamp(context['time'])
     inserted_data = (context['message'], get_nickname(context),
-                     context['user_id'], context['time'], str(time))
+                     context['user_id'], context['time'], str(log_time))
     c.execute("insert into log values (?,?,?,?,?)", inserted_data)
     c.commit()
 

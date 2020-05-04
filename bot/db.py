@@ -12,6 +12,7 @@ def init_database(app):
             c.executescript(f.read())
         c.commit()
 
+
 def init_waken_num(cursor):
     c = cursor
     today_date = date.today()

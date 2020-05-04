@@ -1,7 +1,12 @@
 import random
-from flask import g, current_app
-from datetime import date
-from .utils import *
+# from flask import g, current_app
+from datetime import date, datetime, timedelta
+from .db import get_db
+from .utils import reply, get_nickname, admin_required, average_rest_time, send
+from .utils import xiuxian_level
+
+
+# from .utils import *
 
 
 def help(context, args):
@@ -91,7 +96,7 @@ def zaoguys(context, args):
 
 def ask(context, args):
     try:
-        question = args[0]
+        _ = args[0]
     except IndexError:
         return reply("说一个二元问题(´・ω・`)")
     if random.randrange(2) == 1:
@@ -155,8 +160,8 @@ def rest_statistic(context, args):
     rest_list = c.execute('select * from rest_record where id = ?', (context["user_id"],)).fetchall()
     valid_record = [i for i in rest_list if i['sleep_time'] != '']
     msg = average_rest_time(valid_record, 7) + \
-          average_rest_time(valid_record, 30) + \
-          average_rest_time(valid_record, 365)
+        average_rest_time(valid_record, 30) + \
+        average_rest_time(valid_record, 365)
     if msg == "":
         return reply("暂无数据。")
     else:
