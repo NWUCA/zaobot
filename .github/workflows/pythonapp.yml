@@ -26,6 +26,7 @@ jobs:
         python -m pytest
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/master' # this seems to be a workaround since Github doesn't provide a direct way to do this
     runs-on: ubuntu-18.04
     steps:
     - name: Deploy to test server

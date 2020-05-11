@@ -64,6 +64,11 @@ def test_get_close_db(app):
     assert 'closed' in str(e.value)
 
 
+def test_invalid_request(client):
+    r = client.post('/', json={"hello": "world"})
+    assert r.status_code == 400
+
+
 def test_help(client):
     response = client.post('/', json=data_generator('help'))
     print(response.json)
