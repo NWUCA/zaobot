@@ -172,19 +172,20 @@ def find_cai(context):
         # Download image
         res_base64ed = []
         for image in images:
-            if not image[0][-3:]=="gif":
+            if not image[0][-3:] == "gif":
                 try:
                     res = requests.get(image[1])
                     res_base64ed.append(base64.b64encode(res.content))
-                except:
+                except ConnectionError:
                     raise ValueError("Image download error.")
                     # TODO
             else:
                 pass
 
-        ##Get ocr access key
+        # Get ocr access key
         def get_bd_ocr_key():
-            host = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2'
+            host = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id" \
+                   "=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2 "
             res_ocr_key = requests.get(host)
             if res_ocr_key:
                 res_ocr_key = res_ocr_key.json()
@@ -210,11 +211,11 @@ def find_cai(context):
                 ocr_result_tmp = response.json()
                 try:
                     ocr_result.append(ocr_result_tmp["words_result"])
-                except:
-                    raise TypeError("OCR error :"+str(ocr_result_tmp))
+                except KeyError:
+                    raise TypeError("OCR error :" + str(ocr_result_tmp))
         # checking for if there do got a "好菜"
         for result in ocr_result:
-             for text in result:
+            for text in result:
                 if "好菜" in text["words"] or "太菜" in text["words"]:
                     is_cai = True
     elif "好菜" in context["message"] or "太菜" in context["message"]:
@@ -223,7 +224,7 @@ def find_cai(context):
         is_cai = False
 
     # Ban that guy and recall the message:
-    if context["user_id"] == 1195944745 and context["group_id"] == 102334415 and is_cai:
+    if context["group_id"] == 102334415 and is_cai:
         post_data = {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
         post_data = {"message_id": context["message_id"]}

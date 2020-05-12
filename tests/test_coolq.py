@@ -191,13 +191,17 @@ class MessageHandler:
 def test_cai(client):
     assert send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False) == 'yes'
     assert send(client,
-                    "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,url=https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2824785452,1179668095&fm=26&gp=0.jpg]",
-                    user_id=1195944745,
-                    auto_prefix_slash=False) == "no"
+                "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                "url=https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2824785452,"
+                "1179668095&fm=26&gp=0.jpg]",
+                user_id=1195944745,
+                auto_prefix_slash=False) == "no"
     assert send(client, "我好菜啊", auto_prefix_slash=False) == 'no'
-    assert send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+    assert send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                        "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
                 user_id=1195944745,
                 auto_prefix_slash=False) == 'yes'
     assert send(client,
-                    "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-                    auto_prefix_slash=False) == 'no'
+                "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+                auto_prefix_slash=False) == 'no'
