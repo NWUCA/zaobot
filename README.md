@@ -2,11 +2,26 @@
 
 Thanks to the original [zaobot](https://github.com/huiyiqun/zaobot).
 
-Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) and his [Python SDK](https://github.com/richardchien/python-aiocqhttp).
+Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) and his [Python SDK](https://github.com/cqmoe/python-cqhttp).
 
 ## Get started
 See the reference project above.
-The entrance file is *server.py*.
+The entrance file is *bot/server.py*.
+
+To install dependencies:
+```
+pip install -r requirements.txt
+```
+
+To run a server:
+```shell
+./run.sh
+```
+
+To run tests:
+```shell
+python -m pytest
+```
 
 ## Technical structure
 | Library | Description|

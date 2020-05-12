@@ -46,7 +46,7 @@ def zao(context, args):
     elif current_user['sleep_timestamp'] != '':
         return reply("你不是睡了吗？")
     else:
-        return reply(f"你不是起床过了吗？")
+        return reply("你不是起床过了吗？")
 
 
 def wan(context, args):
@@ -86,7 +86,7 @@ def zaoguys(context, args):
     c = get_db()
     today = date.fromtimestamp(context['time'])
     zao_list = c.execute(
-        f'select nickname, wake_timestamp from rest_record where wake_time like ?', (str(today) + "%",)).fetchall()
+        'select nickname, wake_timestamp from rest_record where wake_time like ?', (str(today) + "%",)).fetchall()
     msg = ""
     index = 1
     for person in zao_list:
@@ -120,7 +120,7 @@ def say(context, args):
     secret = " ".join(args)
     timestamp = context['time']
     time = datetime.fromtimestamp(timestamp)
-    c.execute(f"insert into treehole values (?,?,?,?,?)",
+    c.execute("insert into treehole values (?,?,?,?,?)",
               (secret, timestamp, time, get_nickname(context), context['user_id']))
     c.commit()
     return reply("我记在脑子里啦！")
