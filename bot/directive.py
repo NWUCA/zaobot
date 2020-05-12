@@ -1,3 +1,7 @@
+"""
+zaobot的所有指令
+"""
+
 import random
 # from flask import g, current_app
 from datetime import date, datetime, timedelta
@@ -10,7 +14,7 @@ from .utils import xiuxian_level
 
 
 def help(context, args):
-    return reply('我的源码存放在：github.com/cjc7373/zaobot，尽情探索吧。')
+    return reply('我的源码存放在：github.com/NWUCA/zaobot，尽情探索吧。')
 
 
 def zao(context, args):
