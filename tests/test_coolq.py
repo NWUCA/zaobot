@@ -6,6 +6,7 @@ from bot.db import get_db
 import requests_mock
 import re
 
+
 def data_generator(
         message,
         user_id: int = 1,
@@ -252,7 +253,7 @@ def test_菜(client):
         m.post("http://localhost:5700/delete_msg", text="")
         m.post("http://localhost:5700/set_group_ban", text="")
         m.register_uri("GET", "https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png", real_http=True)
-        m.register_uri(requests_mock.ANY, re.compile("aip.baidubce.com"),real_http=True)
+        m.register_uri(requests_mock.ANY, re.compile("aip.baidubce.com"), real_http=True)
         assert send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False) == "yes"
         assert send(client, "我觉得还行", auto_prefix_slash=False) == 'no'
         assert send(client,
