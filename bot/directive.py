@@ -190,7 +190,7 @@ def send_test(context, args):
     send(context, 'test')
 
 
-def sscx(context, args):
+def sxcx(context, args):
     """
     缩写查询，函数名为拼音缩写
     """
@@ -198,11 +198,11 @@ def sscx(context, args):
     data = {"text": word}
     r = requests.post('https://lab.magiconch.com/api/nbnhhsh/guess', json=data)
     try:
-        r.json()[0]['trans']
+        r.json()[0]['name']
     except (IndexError, KeyError):
         return reply("上游似乎出锅了QAQ")
     resp_data = r.json()[0]
     trans = resp_data.get('trans')
     if trans is None:
-        return reply("未找到相关的缩写。")
-    return reply(f"{word} 可能是{','.join(trans)}的缩写。")
+        return reply(f"未找到{word}的解释。", at_sender=False)
+    return reply(f"{word} 可能是{','.join(trans)}的缩写。", at_sender=False)
