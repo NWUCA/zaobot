@@ -212,4 +212,3 @@ def sxcx(context, args):
             rtn += f"{word} 可能是{','.join(trans)}的缩写。\n"
     rtn.strip()
     return reply(rtn, at_sender=False)
-
