@@ -2,3 +2,4 @@ flask
 pytest
 requests
 requests_mock
+flake8
