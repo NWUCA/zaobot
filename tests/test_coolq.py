@@ -188,6 +188,40 @@ class MessageHandler:
 #     print(response)
 #     assert 'test_card' in response
 
+def test_abbreviation_query(client, requests_mock):
+    class Callback:
+        def __init__(self):
+            self.data = [
+                    {
+                        "name": "zsbd",
+                        "trans": [
+                            "字数补丁",
+                            "这说不定",
+                        ]
+                    }
+                ]
+            self.status_code = 200
+
+        def handler(self, request, context):
+            context.status_code = self.status_code
+            return self.data
+
+    callback = Callback()
+    requests_mock.post("https://lab.magiconch.com/api/nbnhhsh/guess", json=callback.handler)
+    r = send(client, 'sscx zsbd')
+    print(r)
+    assert "字数补丁" in r
+
+    # test only one translation
+    callback.data = [{"name": "zsbd", "trans": ["搞黄色"]}]
+    assert "搞黄色" in send(client, 'sscx ghs')
+
+    # test if upstream format changed
+    callback.data = []
+    assert "上游似乎出锅了" in send(client, 'sscx zsbd')
+    callback.data = [{"hahaa": "haha"}]
+    assert "上游似乎出锅了" in send(client, 'sscx zsbd')
+
 
 def test_cai(client):
 

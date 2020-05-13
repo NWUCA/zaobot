@@ -9,6 +9,8 @@ from .db import get_db
 from .utils import reply, get_nickname, admin_required, average_rest_time, send
 from .utils import xiuxian_level
 
+import requests
+
 
 # from .utils import *
 
@@ -186,3 +188,21 @@ def xiuxian_ranking(context, args):
 
 def send_test(context, args):
     send(context, 'test')
+
+
+def sscx(context, args):
+    """
+    缩写查询，函数名为拼音缩写
+    """
+    word = args[0]
+    data = {"text": word}
+    r = requests.post('https://lab.magiconch.com/api/nbnhhsh/guess', json=data)
+    try:
+        r.json()[0]['trans']
+    except (IndexError, KeyError):
+        return reply("上游似乎出锅了QAQ")
+    resp_data = r.json()[0]
+    trans = resp_data.get('trans')
+    if trans is None:
+        return reply("未找到相关的缩写。")
+    return reply(f"{word} 可能是{','.join(trans)}的缩写。")
