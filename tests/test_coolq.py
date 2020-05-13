@@ -4,7 +4,7 @@ import sqlite3
 # from pprint import pprint
 from bot.db import get_db
 import requests_mock
-
+import re
 
 def data_generator(
         message,
@@ -192,14 +192,14 @@ def test_abbreviation_query(client, requests_mock):
     class Callback:
         def __init__(self):
             self.data = [
-                    {
-                        "name": "zsbd",
-                        "trans": [
-                            "字数补丁",
-                            "这说不定",
-                        ]
-                    }
-                ]
+                {
+                    "name": "zsbd",
+                    "trans": [
+                        "字数补丁",
+                        "这说不定",
+                    ]
+                }
+            ]
             self.status_code = 200
 
         def handler(self, request, context):
@@ -247,21 +247,25 @@ def test_abbreviation_query(client, requests_mock):
     assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
 
 
-def test_cai(client):
-
-    assert send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False) == 'yes'
-    assert send(client,
-                "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                "url=https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2824785452,"
-                "1179668095&fm=26&gp=0.jpg]",
-                user_id=1195944745,
-                auto_prefix_slash=False) == "no"
-    assert send(client, "我好菜啊", auto_prefix_slash=False) == 'no'
-    assert send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                        "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-                user_id=1195944745,
-                auto_prefix_slash=False) == 'yes'
-    assert send(client,
-                "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-                auto_prefix_slash=False) == 'no'
+def test_菜(client):
+    with requests_mock.Mocker() as m:
+        m.post("http://localhost:5700/delete_msg", text="")
+        m.post("http://localhost:5700/set_group_ban", text="")
+        m.register_uri("GET", "https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png", real_http=True)
+        m.register_uri(requests_mock.ANY, re.compile("aip.baidubce.com"),real_http=True)
+        assert send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False) == "yes"
+        assert send(client, "我觉得还行", auto_prefix_slash=False) == 'no'
+        assert send(client,
+                    "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                    "url=https://www.baidu.com/img/bd_logo1.png",
+                    user_id=1195944745,
+                    auto_prefix_slash=False) == 'no'
+        assert send(client, "我好菜啊", auto_prefix_slash=False) == 'yes'
+        assert send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                            "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+                            user_id=1195944745,
+                            auto_prefix_slash=False) == 'yes'
+        assert send(client,
+                    "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                    "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+                    auto_prefix_slash=False) == 'yes'

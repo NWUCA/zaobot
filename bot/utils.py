@@ -163,7 +163,7 @@ def accumulate_exp(context):
         c.commit()
 
 
-def find_cai(context):
+def find_菜(context):
     # Get image url
     is_cai = False
     msg = context["message"]
@@ -186,9 +186,13 @@ def find_cai(context):
                 res_ocr_key["create_time"] = time.time()
                 return res_ocr_key
 
-        if "bdocrkey" in g:
-            if not (time.time() - g.bdocrkey.create_time) >= (g.bdocrkey.expires_in - 6400):
+        if "bdocrkey" not in g:
+            g.bdocrkey = get_bd_ocr_key()
+        if "create_time" in g.bdocrkey:
+            if not (time.time() - g.bdocrkey["create_time"]) >= (g.bdocrkey["expires_in"] - 6400):
                 g.bdocrkey = get_bd_ocr_key()
+        else:
+            g.bdocrkey = get_bd_ocr_key()
         # request for the result
         ocr_result = []
         for img in res_base64ed:
@@ -216,7 +220,7 @@ def find_cai(context):
 
     # Ban that guy and recall the message:
     if context["group_id"] == 102334415 and is_cai:
-        post_data = {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
+        post_data = {"group_id": 102334415, "user_id": context["user_id"], "duration": 10}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
         post_data = {"message_id": context["message_id"]}
         requests.post("http://localhost:5700/delete_msg", json=post_data)

@@ -41,7 +41,7 @@ def handler():
         abort(400)
 
     pre_process(payload)
-    cai_res = utils.find_cai(payload)
+    cai_res = utils.find_菜(payload)
 
     raw_message = payload.get("message").strip()
     if raw_message[0] == '/':
