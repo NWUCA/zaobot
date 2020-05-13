@@ -235,6 +235,7 @@ def test_abbreviation_query(client, requests_mock):
     r = send(client, 'sxcx aaaaa')
     assert "aa 可能是啊啊的缩写。" in r
     assert "aaa 可能是啊啊啊的缩写。" in r
+    assert not r.endswith('\n')  # test end of line
 
     # test if upstream format changed
     callback.data = []
