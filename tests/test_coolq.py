@@ -215,7 +215,7 @@ def test_abbreviation_query(client, requests_mock):
 
     # test if no translation
     callback.data = [{"name": "aaaa", "inputting": []}]
-    assert "未找到相关的缩写" in send(client, 'sscx aaaa')
+    assert "未找到aaaa的解释" in send(client, 'sscx aaaa')
 
     # test if upstream format changed
     callback.data = []

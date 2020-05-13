@@ -204,5 +204,5 @@ def sscx(context, args):
     resp_data = r.json()[0]
     trans = resp_data.get('trans')
     if trans is None:
-        return reply("未找到相关的缩写。")
-    return reply(f"{word} 可能是{','.join(trans)}的缩写。")
+        return reply(f"未找到{word}的解释。", at_sender=False)
+    return reply(f"{word} 可能是{','.join(trans)}的缩写。", at_sender=False)
