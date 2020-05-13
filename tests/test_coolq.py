@@ -217,6 +217,25 @@ def test_abbreviation_query(client, requests_mock):
     callback.data = [{"name": "aaaa", "inputting": []}]
     assert "未找到aaaa的解释" in send(client, 'sxcx aaaa')
 
+    # test if there are two words
+    callback.data = [
+      {
+        "name": "aa",
+        "trans": [
+          "啊啊",
+        ]
+      },
+      {
+        "name": "aaa",
+        "trans": [
+          "啊啊啊",
+        ]
+      }
+    ]
+    r = send(client, 'sxcx aaaaa')
+    assert "aa 可能是啊啊的缩写。" in r
+    assert "aaa 可能是啊啊啊的缩写。" in r
+
     # test if upstream format changed
     callback.data = []
     assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
