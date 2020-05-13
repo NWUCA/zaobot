@@ -8,20 +8,8 @@ Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) and h
 See the reference project above.
 The entrance file is *bot/server.py*.
 
-To install dependencies:
-```
-pip install -r requirements.txt
-```
-
-To run a server:
-```shell
-./run.sh
-```
-
 To run tests:
-```shell
-python -m pytest
-```
+
 
 ## Technical structure
 | Library | Description|
@@ -33,4 +21,29 @@ python -m pytest
 |requests_mock| intercept HTTP requests|
 
 ## How to contribute
-Post an issue or make a pull request!
+1. Clone this repository and install dependencies.
+    ```shell script
+    git clone https://github.com/NWUCA/zaobot.git
+    cd zaobot
+    pip install -r requirements.txt
+    ```
+   
+2. Write code.
+
+    Mostly you just need to modify `bot/directive.py` (to add directives) and `tests/test_coolq.py` (to add tests).
+    
+    To start a server:
+    ```shell script
+    ./run.sh
+    ```
+   
+3. Run tests.
+    ```shell script
+    python -m pytest
+    ```
+    Also you need to run flake8 checks. Note we don't meet PEP 8's line length limits.
+    ```shell script
+    flake8 --max-line-length 127
+    ```
+   
+4. Make a pull request.
