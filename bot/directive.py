@@ -190,7 +190,7 @@ def send_test(context, args):
     send(context, 'test')
 
 
-def sscx(context, args):
+def sxcx(context, args):
     """
     缩写查询，函数名为拼音缩写
     """

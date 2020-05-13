@@ -205,20 +205,20 @@ def test_abbreviation_query(client, requests_mock):
 
     callback = Callback()
     requests_mock.post("https://lab.magiconch.com/api/nbnhhsh/guess", json=callback.handler)
-    r = send(client, 'sscx zsbd')
+    r = send(client, 'sxcx zsbd')
     print(r)
     assert "字数补丁" in r
 
     # test only one translation
     callback.data = [{"name": "zsbd", "trans": ["搞黄色"]}]
-    assert "搞黄色" in send(client, 'sscx ghs')
+    assert "搞黄色" in send(client, 'sxcx ghs')
 
     # test if no translation
     callback.data = [{"name": "aaaa", "inputting": []}]
-    assert "未找到aaaa的解释" in send(client, 'sscx aaaa')
+    assert "未找到aaaa的解释" in send(client, 'sxcx aaaa')
 
     # test if upstream format changed
     callback.data = []
-    assert "上游似乎出锅了" in send(client, 'sscx zsbd')
+    assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
     callback.data = [{"hahaa": "haha"}]
-    assert "上游似乎出锅了" in send(client, 'sscx zsbd')
+    assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
