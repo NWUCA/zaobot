@@ -213,6 +213,10 @@ def test_abbreviation_query(client, requests_mock):
     callback.data = [{"name": "zsbd", "trans": ["搞黄色"]}]
     assert "搞黄色" in send(client, 'sscx ghs')
 
+    # test if no translation
+    callback.data = [{"name": "aaaa", "inputting": []}]
+    assert "未找到相关的缩写" in send(client, 'sscx aaaa')
+
     # test if upstream format changed
     callback.data = []
     assert "上游似乎出锅了" in send(client, 'sscx zsbd')

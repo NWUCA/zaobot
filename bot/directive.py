@@ -198,7 +198,7 @@ def sscx(context, args):
     data = {"text": word}
     r = requests.post('https://lab.magiconch.com/api/nbnhhsh/guess', json=data)
     try:
-        r.json()[0]['trans']
+        r.json()[0]['name']
     except (IndexError, KeyError):
         return reply("上游似乎出锅了QAQ")
     resp_data = r.json()[0]
