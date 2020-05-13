@@ -3,6 +3,7 @@ from datetime import datetime
 import sqlite3
 # from pprint import pprint
 from bot.db import get_db
+import requests_mock
 
 
 def data_generator(
@@ -189,6 +190,7 @@ class MessageHandler:
 
 
 def test_cai(client):
+
     assert send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False) == 'yes'
     assert send(client,
                 "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"

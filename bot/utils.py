@@ -173,19 +173,13 @@ def find_cai(context):
         res_base64ed = []
         for image in images:
             if not image[0][-3:] == "gif":
-                try:
-                    res = requests.get(image[1])
-                    res_base64ed.append(base64.b64encode(res.content))
-                except ConnectionError:
-                    raise ValueError("Image download error.")
-                    # TODO
-            else:
-                pass
+                res = requests.get(image[1])
+                res_base64ed.append(base64.b64encode(res.content))
 
         # Get ocr access key
         def get_bd_ocr_key():
             host = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id" \
-                   "=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2 "
+                   "=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2"
             res_ocr_key = requests.get(host)
             if res_ocr_key:
                 res_ocr_key = res_ocr_key.json()
@@ -193,12 +187,8 @@ def find_cai(context):
                 return res_ocr_key
 
         if "bdocrkey" in g:
-            if (time.time() - g.bdocrkey.create_time) >= (g.bdocrkey.expires_in - 6400):
-                pass
-            else:
+            if not (time.time() - g.bdocrkey.create_time) >= (g.bdocrkey.expires_in - 6400):
                 g.bdocrkey = get_bd_ocr_key()
-        else:
-            g.bdocrkey = get_bd_ocr_key()
         # request for the result
         ocr_result = []
         for img in res_base64ed:
@@ -208,6 +198,7 @@ def find_cai(context):
             response = requests.post(request_url, data=params,
                                      headers={'content-type': 'application/x-www-form-urlencoded'})
             if response:
+                # DOC:https://ai.baidu.com/ai-doc/OCR/zk3h7xz52
                 ocr_result_tmp = response.json()
                 try:
                     ocr_result.append(ocr_result_tmp["words_result"])
