@@ -212,3 +212,11 @@ def sxcx(context, args):
             rtn += f"{word} 可能是{','.join(trans)}的缩写。\n"
     rtn.strip()
     return reply(rtn, at_sender=False)
+                             
+def nmsl(context, args):
+    r = requests.get('https://nmsl.shadiao.app/api.php?lang=zh_cn')
+    return reply(r.text, at_sender=True)
+
+def yygq(context, args): 
+    r = requests.get('https://nmsl.shadiao.app/api.php?level=min&lang=zh_cn')
+    return reply(r.text, at_sender=True)
