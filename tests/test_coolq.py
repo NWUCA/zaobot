@@ -138,6 +138,11 @@ def test_say(client):
     assert "我记在脑子里啦" in send(client, 'say anything')
 
 
+def test_private_only_decorator(client):
+    print(send(client, 'rest_statistic'))
+    assert "请私聊我获取作息统计信息。" in send(client, 'rest_statistic')
+
+
 def test_rest_statistic(client):
     response = send(client, 'rest_statistic', message_type='private')
     print(response)
