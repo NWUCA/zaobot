@@ -223,7 +223,7 @@ def find_cai(context):
                 try:
                     ocr_result.append(ocr_result_tmp["words_result"])
                 except KeyError:
-                    raise TypeError("OCR error :" + str(ocr_result_tmp))
+                    raise KeyError("OCR error :" + str(ocr_result_tmp))
     # checking for if there do got a "菜"
     is_cai = False
     cai_list = ["太菜", "好菜"]
