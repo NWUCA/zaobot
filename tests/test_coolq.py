@@ -260,12 +260,10 @@ def test_cai(client):
         data_tmp.append(request.json())
         return ""
 
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=True) as m:
         m.post("/delete_msg", text=check_correct)
         m.post("/set_group_ban", text=check_correct)
         m.post("/send_msg", json={"data": ""})
-        m.register_uri("GET", "https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png", real_http=True)
-        m.register_uri(requests_mock.ANY, re.compile("aip.baidubce.com"), real_http=True)
         send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
         assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
         data_tmp = []
