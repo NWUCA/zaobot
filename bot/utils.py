@@ -179,9 +179,10 @@ def accumulate_exp(context):
         c.commit()
 
 
-def find_菜(context):
-    # Get image url
+def find_cai(context):
     is_cai = False
+    ocr_result = []
+    # Get image url
     msg = context["message"]
     if re.search(r"(\[CQ:image.*?\])", msg):
         images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
@@ -210,7 +211,6 @@ def find_菜(context):
         else:
             g.bdocrkey = get_bd_ocr_key()
         # request for the result
-        ocr_result = []
         for img in res_base64ed:
             params = {"image": img}
             request_url = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic"
@@ -224,22 +224,22 @@ def find_菜(context):
                     ocr_result.append(ocr_result_tmp["words_result"])
                 except KeyError:
                     raise TypeError("OCR error :" + str(ocr_result_tmp))
-        # checking for if there do got a "好菜"
-        for result in ocr_result:
-            for text in result:
-                if "好菜" in text["words"] or "太菜" in text["words"]:
-                    is_cai = True
-    elif "好菜" in context["message"] or "太菜" in context["message"]:
-        is_cai = True
-    else:
-        is_cai = False
+    # checking for if there do got a "菜"
+    is_cai = False
+    cai_list = ["太菜", "好菜"]
+    words_list = [context["message"]]
+    for result in ocr_result:
+        for text in result:
+            words_list.append(text["words"])
+    for word in words_list:
+        for cai in cai_list:
+            if cai in word:
+                is_cai = True
 
-    # Ban that guy and recall the message:
+    # Ban that guy and recall the message and say "你太强啦":
     if context["group_id"] == 102334415 and is_cai:
         post_data = {"group_id": 102334415, "user_id": context["user_id"], "duration": 10}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
         post_data = {"message_id": context["message_id"]}
         requests.post("http://localhost:5700/delete_msg", json=post_data)
-        return "yes"
-    else:
-        return "no"
+        send(context, "你太强啦")

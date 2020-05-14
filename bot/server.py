@@ -41,7 +41,6 @@ def handler():
         abort(400)
 
     pre_process(payload)
-    cai_res = utils.find_菜(payload)
 
     raw_message = payload.get("message").strip()
     if raw_message[0] == '/':
@@ -54,8 +53,6 @@ def handler():
         except AttributeError as e:
             print(e)
             response = ''
-    elif cai_res:
-        return jsonify({"reply": cai_res})
     else:
         response = ''
     return jsonify(response) if isinstance(response, dict) else ''
@@ -63,4 +60,5 @@ def handler():
 
 def pre_process(payload):
     utils.log(payload)
+    utils.find_cai(payload)
     # utils.accumulate_exp(payload)
