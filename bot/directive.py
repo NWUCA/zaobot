@@ -213,7 +213,7 @@ def sxcx(context, args):
     rtn = rtn.strip()
     return reply(rtn, at_sender=False)
 
-                           
+
 def nmsl(context, args):
     r = requests.get('https://nmsl.shadiao.app/api.php?lang=zh_cn')
     return reply(r.text, at_sender=True)
