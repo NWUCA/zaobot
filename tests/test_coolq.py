@@ -256,10 +256,6 @@ def test_abbreviation_query(client, requests_mock):
 def test_cai(client):
     data_tmp = []
 
-    def send_without_response(client_, *args, **kwargs):
-        response = client_.post('/', json=data_generator(*args, **kwargs))
-        return response
-
     def check_correct(request, context):
         data_tmp.append(request.json())
         return ""
@@ -270,35 +266,35 @@ def test_cai(client):
         m.post("/send_msg", json={"data": ""})
         m.register_uri("GET", "https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png", real_http=True)
         m.register_uri(requests_mock.ANY, re.compile("aip.baidubce.com"), real_http=True)
-        send_without_response(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
+        send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
         assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
         data_tmp = []
 
-        send_without_response(client, "我觉得还行", auto_prefix_slash=False)
+        send(client, "我觉得还行", auto_prefix_slash=False)
         assert data_tmp == []
         data_tmp = []
 
-        send_without_response(client,
-                              "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                              "url=https://www.baidu.com/img/bd_logo1.png",
-                              user_id=1195944745,
-                              auto_prefix_slash=False)
+        send(client,
+             "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+             "url=https://www.baidu.com/img/bd_logo1.png",
+             user_id=1195944745,
+             auto_prefix_slash=False)
         assert data_tmp == []
         data_tmp = []
 
-        send_without_response(client, "我好菜啊", auto_prefix_slash=False)
+        send(client, "我好菜啊", auto_prefix_slash=False)
         assert data_tmp[0] == {"group_id": 102334415, "user_id": 1, "duration": 10}
         data_tmp = []
 
-        send_without_response(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                                      "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-                              user_id=1195944745,
-                              auto_prefix_slash=False)
+        send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                     "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+             user_id=1195944745,
+             auto_prefix_slash=False)
         assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
         data_tmp = []
 
-        send_without_response(client,
-                              "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                              "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-                              auto_prefix_slash=False)
+        send(client,
+             "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+             "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+             auto_prefix_slash=False)
         assert data_tmp[0] == {"group_id": 102334415, "user_id": 1, "duration": 10}
