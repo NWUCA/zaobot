@@ -253,45 +253,50 @@ def test_abbreviation_query(client, requests_mock):
 
 
 def test_cai(client):
-    data_tmp = []
+    class Callback:
+        def __init__(self):
+            self.data = {}
 
-    def check_correct(request, context):
-        data_tmp.append(request.json())
-        return ""
+        def handler(self, request, context):
+            self.data = request.json()
+            return self.data
+
+    callback = Callback()
 
     with requests_mock.Mocker(real_http=True) as m:
-        m.post("/delete_msg", text=check_correct)
-        m.post("/set_group_ban", text=check_correct)
-        m.post("/send_msg", json={"data": ""})
-        send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
-        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
-        data_tmp = []
+        m.post("/delete_msg", json=callback.handler)
+        m.post("/set_group_ban")
 
+        def send_msg_callback(request, context):
+            # print(request.json())
+            assert "违规内容" in request.json()['message']
+            return {"data": "success"}
+        m.post("/send_msg", json=send_msg_callback)
+
+        send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
+        assert callback.data != {}
+
+        callback.data = {}
         send(client, "我觉得还行", auto_prefix_slash=False)
-        assert data_tmp == []
-        data_tmp = []
+        assert callback.data == {}
 
         send(client,
              "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
              "url=https://www.baidu.com/img/bd_logo1.png",
              user_id=1195944745,
              auto_prefix_slash=False)
-        assert data_tmp == []
-        data_tmp = []
+        assert callback.data == {}
 
-        send(client, "我好菜啊", auto_prefix_slash=False)
-        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1, "duration": 10}
-        data_tmp = []
-
-        send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-                     "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-             user_id=1195944745,
-             auto_prefix_slash=False)
-        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
-        data_tmp = []
-
+        callback.data = {}
         send(client,
              "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
              "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
              auto_prefix_slash=False)
-        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1, "duration": 10}
+        assert callback.data != {}
+
+        callback.data = {}
+        send(client,
+             "哈哈哈哈 [CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+             "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+             auto_prefix_slash=False)
+        assert callback.data != {}

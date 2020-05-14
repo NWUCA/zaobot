@@ -109,7 +109,6 @@ def send(context, message, **kwargs):
 
     log({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context['time'], 'user_id': 0})
 
-    import requests
     url = 'http://127.0.0.1:5700/send_msg'
     resp = requests.post(url, json=context)
     if resp.ok:
@@ -180,12 +179,13 @@ def accumulate_exp(context):
 
 
 def find_cai(context):
-    is_cai = False
     ocr_result = []
+
     # Get image url
     msg = context["message"]
-    if re.search(r"(\[CQ:image.*?\])", msg):
-        images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
+    images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
+
+    if images:
         # Download image
         res_base64ed = []
         for image in images:
@@ -210,6 +210,7 @@ def find_cai(context):
                 g.bdocrkey = get_bd_ocr_key()
         else:
             g.bdocrkey = get_bd_ocr_key()
+
         # request for the result
         for img in res_base64ed:
             params = {"image": img}
@@ -224,22 +225,28 @@ def find_cai(context):
                     ocr_result.append(ocr_result_tmp["words_result"])
                 except KeyError:
                     raise KeyError("OCR error :" + str(ocr_result_tmp))
-    # checking for if there do got a "菜"
+
+    # re match
     is_cai = False
-    cai_list = ["太菜", "好菜"]
+    cai = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
     words_list = [context["message"]]
     for result in ocr_result:
         for text in result:
             words_list.append(text["words"])
     for word in words_list:
-        for cai in cai_list:
-            if cai in word:
-                is_cai = True
+        if cai.search(word):
+            is_cai = True
 
     # Ban that guy and recall the message and say "你太强啦":
     if context["group_id"] == 102334415 and is_cai:
-        post_data = {"group_id": 102334415, "user_id": context["user_id"], "duration": 10}
+        post_data = {"group_id": 102334415, "user_id": context["user_id"], "duration": 60}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
         post_data = {"message_id": context["message_id"]}
         requests.post("http://localhost:5700/delete_msg", json=post_data)
-        send(context, "你太强啦")
+
+        # process message
+        def sub(matched):
+            # print(matched[1], matched[2])
+            return matched[2]
+        processed_msg = re.sub(r"\[CQ:image,file=(.*?),url=(.*?)\]", sub, msg)
+        send(context, f"违规内容：{get_nickname(context)} {datetime.fromtimestamp(context['time'])} {processed_msg}")
