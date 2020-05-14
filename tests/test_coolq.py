@@ -3,6 +3,7 @@ from datetime import datetime
 import sqlite3
 # from pprint import pprint
 from bot.db import get_db
+import requests_mock
 
 
 def data_generator(
@@ -12,9 +13,11 @@ def data_generator(
         role: str = 'member',
         card: str = 'test_card',
         nickname: str = 'test_nickname',
-        message_type: str = 'group'
+        message_type: str = 'group',
+        auto_prefix_slash: bool = True
 ):
-    message = "/" + message
+    if auto_prefix_slash:
+        message = "/" + message
     timestamp = datetime.fromisoformat(time).timestamp()
     data = {
         "anonymous": "None",
@@ -194,14 +197,14 @@ def test_abbreviation_query(client, requests_mock):
     class Callback:
         def __init__(self):
             self.data = [
-                    {
-                        "name": "zsbd",
-                        "trans": [
-                            "字数补丁",
-                            "这说不定",
-                        ]
-                    }
-                ]
+                {
+                    "name": "zsbd",
+                    "trans": [
+                        "字数补丁",
+                        "这说不定",
+                    ]
+                }
+            ]
             self.status_code = 200
 
         def handler(self, request, context):
@@ -224,18 +227,18 @@ def test_abbreviation_query(client, requests_mock):
 
     # test if there are two words
     callback.data = [
-      {
-        "name": "aa",
-        "trans": [
-          "啊啊",
-        ]
-      },
-      {
-        "name": "aaa",
-        "trans": [
-          "啊啊啊",
-        ]
-      }
+        {
+            "name": "aa",
+            "trans": [
+                "啊啊",
+            ]
+        },
+        {
+            "name": "aaa",
+            "trans": [
+                "啊啊啊",
+            ]
+        }
     ]
     r = send(client, 'sxcx aaaaa')
     assert "aa 可能是啊啊的缩写。" in r
@@ -247,3 +250,48 @@ def test_abbreviation_query(client, requests_mock):
     assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
     callback.data = [{"hahaa": "haha"}]
     assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
+
+
+def test_cai(client):
+    data_tmp = []
+
+    def check_correct(request, context):
+        data_tmp.append(request.json())
+        return ""
+
+    with requests_mock.Mocker(real_http=True) as m:
+        m.post("/delete_msg", text=check_correct)
+        m.post("/set_group_ban", text=check_correct)
+        m.post("/send_msg", json={"data": ""})
+        send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
+        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
+        data_tmp = []
+
+        send(client, "我觉得还行", auto_prefix_slash=False)
+        assert data_tmp == []
+        data_tmp = []
+
+        send(client,
+             "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+             "url=https://www.baidu.com/img/bd_logo1.png",
+             user_id=1195944745,
+             auto_prefix_slash=False)
+        assert data_tmp == []
+        data_tmp = []
+
+        send(client, "我好菜啊", auto_prefix_slash=False)
+        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1, "duration": 10}
+        data_tmp = []
+
+        send(client, "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+                     "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+             user_id=1195944745,
+             auto_prefix_slash=False)
+        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1195944745, "duration": 10}
+        data_tmp = []
+
+        send(client,
+             "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+             "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+             auto_prefix_slash=False)
+        assert data_tmp[0] == {"group_id": 102334415, "user_id": 1, "duration": 10}
