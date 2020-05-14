@@ -4,7 +4,6 @@ import sqlite3
 # from pprint import pprint
 from bot.db import get_db
 import requests_mock
-import re
 
 
 def data_generator(
