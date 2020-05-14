@@ -267,7 +267,7 @@ def test_cai(client):
     with requests_mock.Mocker() as m:
         m.post("/delete_msg", text=check_correct)
         m.post("/set_group_ban", text=check_correct)
-        m.post("/send_msg", json={"data":""})
+        m.post("/send_msg", json={"data": ""})
         m.register_uri("GET", "https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png", real_http=True)
         m.register_uri(requests_mock.ANY, re.compile("aip.baidubce.com"), real_http=True)
         send_without_response(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
