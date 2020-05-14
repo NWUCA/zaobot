@@ -54,11 +54,12 @@ def handler():
             print(e)
             response = ''
     else:
+        utils.find_cai(payload)
         response = ''
     return jsonify(response) if isinstance(response, dict) else ''
 
 
 def pre_process(payload):
     utils.log(payload)
-    utils.find_cai(payload)
+
     # utils.accumulate_exp(payload)
