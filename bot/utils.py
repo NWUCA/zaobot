@@ -42,6 +42,22 @@ class admin_required:
             return reply("你没有权限o(≧口≦)o")
 
 
+class private_message_only:
+    """仅限私聊指令的装饰器"""
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, context, args):
+        if context['message_type'] != 'private':
+            if self.func.__doc__ is None:
+                rtn = f"使用 /{self.func.__name__} 指令。"
+            else:
+                rtn = self.func.__doc__.strip()
+            return reply(f"请私聊我{rtn}")
+        else:
+            return self.func(context, args)
+
+
 def average_rest_time(valid_record: list, delta: int) -> str:
     now = datetime.now().timestamp()
     record = [i for i in valid_record
