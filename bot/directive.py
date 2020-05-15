@@ -219,3 +219,8 @@ def sxcx(context, args):
 def chp(context, args):
     r = requests.get('https://chp.shadiao.app/api.php')
     return reply(r.text, at_sender=False)
+
+
+def nmsl(context, args):
+    r = requests.get('https://chp.shadiao.app/api.php')
+    return reply(r.text, at_sender=True)
