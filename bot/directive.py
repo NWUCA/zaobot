@@ -214,3 +214,8 @@ def sxcx(context, args):
             rtn += f"{word} 可能是{','.join(trans)}的缩写。\n"
     rtn = rtn.strip()
     return reply(rtn, at_sender=False)
+
+
+def chp(context, args):
+    r = requests.get('https://chp.shadiao.app/api.php')
+    return reply(r.text, at_sender=False)
