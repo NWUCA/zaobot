@@ -1,5 +1,10 @@
 from .db import get_db
 from datetime import datetime, timedelta, date
+from flask import g
+import requests
+import base64
+import time
+import re
 
 
 def reply(msg, at_sender=True):
@@ -35,6 +40,22 @@ class admin_required:
             return self.func(*args, **kwargs)
         else:
             return reply("你没有权限o(≧口≦)o")
+
+
+class private_message_only:
+    """仅限私聊指令的装饰器"""
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, context, args):
+        if context['message_type'] != 'private':
+            if self.func.__doc__ is None:
+                rtn = f"使用 /{self.func.__name__} 指令。"
+            else:
+                rtn = self.func.__doc__.strip()
+            return reply(f"请私聊我{rtn}")
+        else:
+            return self.func(context, args)
 
 
 def average_rest_time(valid_record: list, delta: int) -> str:
@@ -88,7 +109,6 @@ def send(context, message, **kwargs):
 
     log({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context['time'], 'user_id': 0})
 
-    import requests
     url = 'http://127.0.0.1:5700/send_msg'
     resp = requests.post(url, json=context)
     if resp.ok:
@@ -148,7 +168,7 @@ def accumulate_exp(context):
         level = user['level']
         while exp > xiuxian_level[level][1]:
             send(context, f'@{get_nickname(context)}，'
-                          f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level+1][0]}期。')
+                          f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
             level += 1
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',
@@ -156,3 +176,77 @@ def accumulate_exp(context):
         if get_nickname(context) != user['nickname']:
             c.execute('update xiuxian_emulator set nickname=? where id=?', (get_nickname(context), user['id']))
         c.commit()
+
+
+def find_cai(context):
+    ocr_result = []
+
+    # Get image url
+    msg = context["message"]
+    images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
+
+    if images:
+        # Download image
+        res_base64ed = []
+        for image in images:
+            if not image[0][-3:] == "gif":
+                res = requests.get(image[1])
+                res_base64ed.append(base64.b64encode(res.content))
+
+        # Get ocr access key
+        def get_bd_ocr_key():
+            host = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id" \
+                   "=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2"
+            res_ocr_key = requests.get(host)
+            if res_ocr_key:
+                res_ocr_key = res_ocr_key.json()
+                res_ocr_key["create_time"] = time.time()
+                return res_ocr_key
+
+        if "bdocrkey" not in g:
+            g.bdocrkey = get_bd_ocr_key()
+        if "create_time" in g.bdocrkey:
+            if not (time.time() - g.bdocrkey["create_time"]) >= (g.bdocrkey["expires_in"] - 6400):
+                g.bdocrkey = get_bd_ocr_key()
+        else:
+            g.bdocrkey = get_bd_ocr_key()
+
+        # request for the result
+        for img in res_base64ed:
+            params = {"image": img}
+            request_url = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic"
+            request_url = request_url + "?access_token=" + g.bdocrkey["access_token"]
+            response = requests.post(request_url, data=params,
+                                     headers={'content-type': 'application/x-www-form-urlencoded'})
+            if response:
+                # DOC:https://ai.baidu.com/ai-doc/OCR/zk3h7xz52
+                ocr_result_tmp = response.json()
+                try:
+                    ocr_result.append(ocr_result_tmp["words_result"])
+                except KeyError:
+                    raise KeyError("OCR error :" + str(ocr_result_tmp))
+
+    # re match
+    is_cai = False
+    cai = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
+    words_list = [context["message"]]
+    for result in ocr_result:
+        for text in result:
+            words_list.append(text["words"])
+    for word in words_list:
+        if cai.search(word):
+            is_cai = True
+
+    # Ban that guy and recall the message and say "你太强啦":
+    if context["group_id"] == 102334415 and is_cai:
+        post_data = {"group_id": 102334415, "user_id": context["user_id"], "duration": 60}
+        requests.post("http://localhost:5700/set_group_ban", json=post_data)
+        post_data = {"message_id": context["message_id"]}
+        requests.post("http://localhost:5700/delete_msg", json=post_data)
+
+        # process message
+        def sub(matched):
+            # print(matched[1], matched[2])
+            return matched[2]
+        processed_msg = re.sub(r"\[CQ:image,file=(.*?),url=(.*?)\]", sub, msg)
+        send(context, f"违规内容：{get_nickname(context)} {datetime.fromtimestamp(context['time'])} {processed_msg}")

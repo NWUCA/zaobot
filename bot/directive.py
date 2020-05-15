@@ -6,8 +6,9 @@ import random
 # from flask import g, current_app
 from datetime import date, datetime, timedelta
 from .db import get_db
-from .utils import reply, get_nickname, admin_required, average_rest_time, send
+from .utils import reply, get_nickname, average_rest_time, send
 from .utils import xiuxian_level
+from .utils import admin_required, private_message_only
 
 import requests
 
@@ -158,10 +159,11 @@ def flush(context, args):
     return reply("清除数据成功。")
 
 
+@private_message_only
 def rest_statistic(context, args):
-    if context['message_type'] != 'private':
-        return reply("请私聊我获得作息统计。")
-
+    """
+    获取作息统计信息。
+    """
     c = get_db()
     rest_list = c.execute('select * from rest_record where id = ?', (context["user_id"],)).fetchall()
     valid_record = [i for i in rest_list if i['sleep_time'] != '']
@@ -212,13 +214,3 @@ def sxcx(context, args):
             rtn += f"{word} 可能是{','.join(trans)}的缩写。\n"
     rtn = rtn.strip()
     return reply(rtn, at_sender=False)
-
-
-def nmsl(context, args):
-    r = requests.get('https://nmsl.shadiao.app/api.php?lang=zh_cn')
-    return reply(r.text, at_sender=True)
-
-
-def yygq(context, args):
-    r = requests.get('https://nmsl.shadiao.app/api.php?level=min&lang=zh_cn')
-    return reply(r.text, at_sender=True)
