@@ -23,6 +23,12 @@ def create_app(config=None):
     return app
 
 
+ALLOWED_GROUP = {
+    102334415: "西大计算机同萌会",
+    641167948: "2019西大计算机协会",
+}
+
+
 def handler():
     payload = request.json
     post_type = payload.get("post_type")
@@ -40,6 +46,9 @@ def handler():
     if post_type != "message":
         abort(400)
 
+    if payload['message_type'] == 'group' and payload['group_id'] not in ALLOWED_GROUP:
+        abort(400)
+
     pre_process(payload)
 
     raw_message = payload.get("message").strip()
@@ -54,12 +63,12 @@ def handler():
             print(e)
             response = ''
     else:
-        utils.find_cai(payload)
+        if payload['message_type'] == 'group':
+            utils.find_cai(payload)
         response = ''
     return jsonify(response) if isinstance(response, dict) else ''
 
 
 def pre_process(payload):
     utils.log(payload)
-
     # utils.accumulate_exp(payload)

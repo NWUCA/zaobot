@@ -18,11 +18,11 @@ def data_generator(
 ):
     if auto_prefix_slash:
         message = "/" + message
+    assert message_type in ('group', 'private')
     timestamp = datetime.fromisoformat(time).timestamp()
     data = {
         "anonymous": "None",
         "font": 1591808,
-        "group_id": 102334415,
         "message": message,
         "message_id": 1,
         "message_type": message_type,
@@ -44,6 +44,8 @@ def data_generator(
         "time": timestamp,
         "user_id": user_id
     }
+    if message_type == 'group':
+        data["group_id"] = 102334415
     return data
 
 
@@ -53,6 +55,11 @@ def send(client, *args, **kwargs):
         return response.json['reply']
     except TypeError:
         return
+
+
+def test_data_generator():
+    with pytest.raises(AssertionError):
+        data_generator('help', message_type='fake')
 
 
 def test_get_close_db(app):
@@ -264,14 +271,17 @@ def test_cai(client):
     callback = Callback()
 
     with requests_mock.Mocker(real_http=True) as m:
-        m.post("/delete_msg", json=callback.handler)
-        m.post("/set_group_ban")
+        # m.post("/delete_msg", json=callback.handler)
+        m.post("/set_group_ban", json=callback.handler)
 
         def send_msg_callback(request, context):
             # print(request.json())
             assert "违规内容" in request.json()['message']
             return {"data": "success"}
         m.post("/send_msg", json=send_msg_callback)
+
+        send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False, message_type='private')
+        assert callback.data == {}
 
         send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
         assert callback.data != {}
