@@ -86,12 +86,12 @@ def webhook_handler():
         if payload['action'] != "completed":
             return ""
         check_run = payload['check_run']
-        message = f"Check job {check_run['name']} has completed: {check_run['conclusion']}."
+        message = f"CI job {check_run['name']} has completed: {check_run['conclusion']}."
         utils.send(context, message)
     elif request.headers.get("X-GitHub-Event") == 'push':
         payload = request.json
         commits = payload['commits']
-        message = f"{payload['sender']['login']} has pushed {len(commits)} commits" \
+        message = f"{payload['sender']['login']} has pushed {len(commits)} commit(s)" \
                   f" to my repository:"
         for commit in commits:
             message += f"\n{commit['id'][:6]} {commit['message']}"
