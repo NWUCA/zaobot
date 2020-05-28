@@ -92,7 +92,7 @@ def webhook_handler():
         payload = request.json
         commits = payload['commits']
         message = f"{payload['sender']['login']} has pushed {len(commits)} commits" \
-                  f"to my repository:"
+                  f" to my repository:"
         for commit in commits:
             message += f"\n{commit['id'][:6]} {commit['message']}"
         utils.send(context, message)
