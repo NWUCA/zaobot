@@ -212,6 +212,10 @@ def ocr(base64_image):
 
 
 def find_cai(context):
+    # 只针对环卫工有效
+    if context['user_id'] != 595811044:
+        return
+
     # Get image url
     msg = context["message"]
     images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
@@ -230,7 +234,7 @@ def find_cai(context):
     # re match
     cai_re = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
     if cai_re.search(text):
-        post_data = {"group_id": context["group_id"], "user_id": context["user_id"], "duration": 60}
+        post_data = {"group_id": context["group_id"], "user_id": context["user_id"], "duration": 60*20}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
         # delete message is only available in Coolq Pro
         # post_data = {"message_id": context["message_id"]}

@@ -94,7 +94,6 @@ def webhook_handler():
         message = f"{payload['sender']['login']} has pushed {len(commits)} commits" \
                   f"to my repository:"
         for commit in commits:
-            message += f"\n{commit['sha'][:6]} {commit['message']}"
+            message += f"\n{commit['id'][:6]} {commit['message']}"
         utils.send(context, message)
-    else:
-        return ""
+    return ""
