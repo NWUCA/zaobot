@@ -1,6 +1,7 @@
+import os
+import time
 from flask import Flask, request, abort, jsonify
 from . import db
-import os
 from . import directive, utils
 
 
@@ -17,6 +18,7 @@ def create_app(config=None):
     db.init_database(app)
 
     app.route('/', methods=['POST'])(handler)
+    app.route('/webhook', methods=['POST'])(webhook_handler)
 
     app.teardown_appcontext(db.close_db)
 
@@ -72,3 +74,27 @@ def handler():
 def pre_process(payload):
     utils.log(payload)
     # utils.accumulate_exp(payload)
+
+
+def webhook_handler():
+    # FIXME Shall not hardcode group id
+    context = {"group_id": 102334415, "time": time.time()}
+
+    # DOC: https://developer.github.com/webhooks/event-payloads/
+    if request.headers.get("X-GitHub-Event") == 'check_run':
+        payload = request.json
+        if payload['action'] != "completed":
+            return ""
+        check_run = payload['check_run']
+        message = f"Check job {check_run['name']} has completed: {check_run['conclusion']}."
+        utils.send(context, message)
+    elif request.headers.get("X-GitHub-Event") == 'push':
+        payload = request.json
+        commits = payload['commits']
+        message = f"{payload['sender']['login']} has pushed {len(commits)} commits" \
+                  f"to my repository:"
+        for commit in commits:
+            message += f"\n{commit['sha'][:6]} {commit['message']}"
+        utils.send(context, message)
+    else:
+        return ""
