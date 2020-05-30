@@ -282,8 +282,9 @@ def tg_send_media_group(text, photo_urls, chat_id=TELEGRAM_CHAT_ID):
 
 
 def send_to_tg(context):
-    name = get_nickname(context)
-    msg_prefix = f"[{name}]:"
+    group_card = context['sender'].get('card')
+    nickname = context['sender'].get('nickname')
+    msg_prefix = f"[{group_card}({nickname})]:"
     image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
     image_urls = list(map(lambda a: a[1], re.findall(image_re, context['message'])))
     msg = re.sub(image_re, lambda a: " ", context['message'])

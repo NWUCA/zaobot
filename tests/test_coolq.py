@@ -326,7 +326,7 @@ def test_send_to_tg(client, requests_mock):
 
     send(client, "我觉得还行", auto_prefix_slash=False)
     print(callback.data)
-    assert callback.data['text'] == '[test_card]: 我觉得还行'
+    assert callback.data['text'] == '[test_card(test_nickname)]: 我觉得还行'
 
     send(client,
          "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
@@ -334,5 +334,6 @@ def test_send_to_tg(client, requests_mock):
          user_id=1195944745,
          auto_prefix_slash=False)
     assert callback.data['media'] == \
-           [{'type': 'photo', 'media': 'https://www.baidu.com/img/bd_logo1.png', 'caption': '[test_card]:  '}]
+           [{'type': 'photo', 'media': 'https://www.baidu.com/img/bd_logo1.png',
+             'caption': '[test_card(test_nickname)]:  '}]
     print(callback.data)

@@ -72,11 +72,12 @@ def handler():
 # TODO 异步执行
 def pre_process(payload):
     utils.log(payload)
-    utils.send_to_tg(payload)
     # utils.accumulate_exp(payload)
 
     if payload['message_type'] == 'group':
         utils.find_cai(payload)
+        if payload['group_id'] == 102334415:
+            utils.send_to_tg(payload)
 
 
 def webhook_handler():
