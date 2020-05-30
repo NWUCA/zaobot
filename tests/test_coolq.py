@@ -326,7 +326,7 @@ def test_send_to_tg(client, requests_mock):
 
     send(client, "我觉得还行", auto_prefix_slash=False)
     print(callback.data)
-    assert callback.data == {'chat_id': '-387073882', 'text': '[test_card]: 我觉得还行'}
+    assert callback.data['text'] == '[test_card]: 我觉得还行'
 
     send(client,
          "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"

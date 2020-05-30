@@ -254,7 +254,7 @@ def find_cai(context):
 # Telegram bot API doc: https://core.telegram.org/bots/api
 TELEGRAM_API_ADDRESS = "https://telegram.coherence.codes"
 TELEGRAM_API_TOKEN = "bot793455209:AAEXy1I4cpaaN5m_C9YNrT5qoRN3He3ULxk"
-TELEGRAM_CHAT_ID = "-387073882"  # A telegram group
+TELEGRAM_CHAT_ID = "-1001492699483"  # A telegram group
 
 
 # TODO 考虑非200 和超时等 exception
