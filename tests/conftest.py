@@ -5,6 +5,11 @@ from bot.server import create_app
 from bot.db import init_database
 
 
+@pytest.fixture(autouse=True)
+def mock_send_to_tg(requests_mock):
+    requests_mock.post("https://telegram.coherence.codes/bot793455209:AAEXy1I4cpaaN5m_C9YNrT5qoRN3He3ULxk/sendMessage")
+
+
 @pytest.fixture(scope='session')
 def app():
     app = create_app({

@@ -3,7 +3,6 @@ from datetime import datetime
 import sqlite3
 # from pprint import pprint
 from bot.db import get_db
-import requests_mock
 
 
 def data_generator(
@@ -259,17 +258,19 @@ def test_abbreviation_query(client, requests_mock):
     assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
 
 
+class SimpleCallback:
+    def __init__(self):
+        self.data = {}
+
+    def handler(self, request, context):
+        self.data = request.json()
+        return self.data
+
+
 def test_cai(client):
-    class Callback:
-        def __init__(self):
-            self.data = {}
+    callback = SimpleCallback()
 
-        def handler(self, request, context):
-            self.data = request.json()
-            return self.data
-
-    callback = Callback()
-
+    import requests_mock
     with requests_mock.Mocker(real_http=True) as m:
         # m.post("/delete_msg", json=callback.handler)
         m.post("/set_group_ban", json=callback.handler)
@@ -278,6 +279,7 @@ def test_cai(client):
             # print(request.json())
             assert "违规内容" in request.json()['message']
             return {"data": "success"}
+
         m.post("/send_msg", json=send_msg_callback)
 
         send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False)
@@ -295,7 +297,7 @@ def test_cai(client):
         #
         # send(client,
         #      "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-        #      "url=https://www.baidu.com/img/bd_logo1.png",
+        #      "url=https://www.baidu.com/img/bd_logo1.png]",
         #      user_id=1195944745,
         #      auto_prefix_slash=False)
         # assert callback.data == {}
@@ -313,3 +315,24 @@ def test_cai(client):
         #      "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
         #      auto_prefix_slash=False)
         # assert callback.data != {}
+
+
+def test_send_to_tg(client, requests_mock):
+    TELEGRAM_API_ADDRESS = "https://telegram.coherence.codes"
+    TELEGRAM_API_TOKEN = "bot793455209:AAEXy1I4cpaaN5m_C9YNrT5qoRN3He3ULxk"
+    callback = SimpleCallback()
+    requests_mock.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMessage", json=callback.handler)
+    requests_mock.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMediaGroup", json=callback.handler)
+
+    send(client, "我觉得还行", auto_prefix_slash=False)
+    print(callback.data)
+    assert callback.data == {'chat_id': '-387073882', 'text': '[test_card]: 我觉得还行'}
+
+    send(client,
+         "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://www.baidu.com/img/bd_logo1.png]",
+         user_id=1195944745,
+         auto_prefix_slash=False)
+    assert callback.data['media'] == \
+           [{'type': 'photo', 'media': 'https://www.baidu.com/img/bd_logo1.png', 'caption': '[test_card]:  '}]
+    print(callback.data)

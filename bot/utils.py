@@ -43,6 +43,7 @@ class admin_required:
 
 class private_message_only:
     """仅限私聊指令的装饰器"""
+
     def __init__(self, func):
         self.func = func
 
@@ -234,8 +235,9 @@ def find_cai(context):
     # re match
     cai_re = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
     if cai_re.search(text):
-        post_data = {"group_id": context["group_id"], "user_id": context["user_id"], "duration": 60*20}
+        post_data = {"group_id": context["group_id"], "user_id": context["user_id"], "duration": 60 * 20}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
+
         # delete message is only available in Coolq Pro
         # post_data = {"message_id": context["message_id"]}
         # requests.post("http://localhost:5700/delete_msg", json=post_data)
@@ -244,5 +246,48 @@ def find_cai(context):
         def sub(matched):
             # print(matched[1], matched[2])
             return matched[2] + ' '
+
         processed_msg = re.sub(r"\[CQ:image,file=(.*?),url=(.*?)\]", sub, msg)
         send(context, f"违规内容：{get_nickname(context)} {datetime.fromtimestamp(context['time'])} {processed_msg}")
+
+
+# Telegram bot API doc: https://core.telegram.org/bots/api
+TELEGRAM_API_ADDRESS = "https://telegram.coherence.codes"
+TELEGRAM_API_TOKEN = "bot793455209:AAEXy1I4cpaaN5m_C9YNrT5qoRN3He3ULxk"
+TELEGRAM_CHAT_ID = "-387073882"  # A telegram group
+
+
+# TODO 考虑非200 和超时等 exception
+def tg_send_msg(text, chat_id=TELEGRAM_CHAT_ID):
+    try:
+        requests.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMessage",
+                      json={"chat_id": chat_id, "text": text}, timeout=5)
+    except requests.exceptions:
+        pass
+
+
+def tg_send_media_group(text, photo_urls, chat_id=TELEGRAM_CHAT_ID):
+    """
+    DOC: https://core.telegram.org/bots/api#sendmediagroup
+    文档上写 media 必须是2-10个元素的 array，实际一个元素也可
+    """
+    media = [{"type": "photo", "media": url} for url in photo_urls]
+    media[0]["caption"] = text  # 插入消息内容
+    try:
+        requests.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMediaGroup",
+                      json={"chat_id": chat_id, "media": media},
+                      timeout=5)
+    except requests.exceptions:
+        pass
+
+
+def send_to_tg(context):
+    name = get_nickname(context)
+    msg_prefix = f"[{name}]:"
+    image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
+    image_urls = list(map(lambda a: a[1], re.findall(image_re, context['message'])))
+    msg = re.sub(image_re, lambda a: " ", context['message'])
+    if image_urls:
+        tg_send_media_group(f"{msg_prefix} {msg}", image_urls)
+    else:
+        tg_send_msg(f"{msg_prefix} {msg}")

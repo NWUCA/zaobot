@@ -65,15 +65,18 @@ def handler():
             print(e)
             response = ''
     else:
-        if payload['message_type'] == 'group':
-            utils.find_cai(payload)
         response = ''
     return jsonify(response) if isinstance(response, dict) else ''
 
 
+# TODO 异步执行
 def pre_process(payload):
     utils.log(payload)
+    utils.send_to_tg(payload)
     # utils.accumulate_exp(payload)
+
+    if payload['message_type'] == 'group':
+        utils.find_cai(payload)
 
 
 def webhook_handler():
