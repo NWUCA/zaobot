@@ -183,8 +183,10 @@ def update_baidu_ai_auth():
     Baidu AI platform is used for ocr
     Auth doc: https://ai.baidu.com/ai-doc/REFERENCE/Ck3dwjhhu
     """
-    host = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id" \
-           "=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2"
+    client_id = current_app.config['BAIDU_AI_AUTH_ID']
+    client_secret = current_app.config['BAIDU_AI_AUTH_SECRET']
+    host = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&" \
+           f"client_id={client_id}&client_secret={client_secret}"
     resp = requests.get(host)
     auth_token = {
         'access_token': resp.json()['access_token'],
@@ -252,21 +254,17 @@ def find_cai(context):
 
 
 # Telegram bot API doc: https://core.telegram.org/bots/api
-TELEGRAM_API_ADDRESS = "https://telegram.coherence.codes"
-TELEGRAM_API_TOKEN = "bot793455209:AAEXy1I4cpaaN5m_C9YNrT5qoRN3He3ULxk"
-TELEGRAM_CHAT_ID = "-1001492699483"  # A telegram group
-
-
 # TODO 考虑非200 和超时等 exception
-def tg_send_msg(text, chat_id=TELEGRAM_CHAT_ID):
+def tg_send_msg(text):
     try:
-        requests.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMessage",
-                      json={"chat_id": chat_id, "text": text}, timeout=5)
+        requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
+                      f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMessage",
+                      json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "text": text}, timeout=5)
     except requests.exceptions:
         pass
 
 
-def tg_send_media_group(text, photo_urls, chat_id=TELEGRAM_CHAT_ID):
+def tg_send_media_group(text, photo_urls):
     """
     DOC: https://core.telegram.org/bots/api#sendmediagroup
     文档上写 media 必须是2-10个元素的 array，实际一个元素也可
@@ -274,8 +272,9 @@ def tg_send_media_group(text, photo_urls, chat_id=TELEGRAM_CHAT_ID):
     media = [{"type": "photo", "media": url} for url in photo_urls]
     media[0]["caption"] = text  # 插入消息内容
     try:
-        requests.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMediaGroup",
-                      json={"chat_id": chat_id, "media": media},
+        requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
+                      f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMediaGroup",
+                      json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "media": media},
                       timeout=5)
     except requests.exceptions:
         pass

@@ -1,6 +1,6 @@
 import os
 import time
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, current_app
 from . import db
 from . import directive, utils
 
@@ -11,6 +11,8 @@ def create_app(config=None):
         DATABASE=os.path.join(app.instance_path, 'database.db')
         # DATABASE='database.db'
     )
+    app.config.from_pyfile(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
+
     if config:
         # load the config if passed in
         app.config.from_mapping(config)
@@ -23,12 +25,6 @@ def create_app(config=None):
     app.teardown_appcontext(db.close_db)
 
     return app
-
-
-ALLOWED_GROUP = {
-    102334415: "西大计算机同萌会",
-    641167948: "2019西大计算机协会",
-}
 
 
 def handler():
@@ -48,7 +44,8 @@ def handler():
     if post_type != "message":
         abort(400)
 
-    if payload['message_type'] == 'group' and payload['group_id'] not in ALLOWED_GROUP:
+    if payload['message_type'] == 'group' and \
+            payload['group_id'] not in current_app.config['ALLOWED_GROUP']:
         abort(400)
 
     pre_process(payload)
@@ -76,13 +73,12 @@ def pre_process(payload):
 
     if payload['message_type'] == 'group':
         utils.find_cai(payload)
-        if payload['group_id'] == 102334415:
+        if payload['group_id'] == current_app.config['FORWARDED_QQ_GROUP_ID']:
             utils.send_to_tg(payload)
 
 
 def webhook_handler():
-    # FIXME Shall not hardcode group id
-    context = {"group_id": 102334415, "time": time.time()}
+    context = {"group_id": current_app.config['WEBHOOK_NOTIFICATION_GROUP'], "time": time.time()}
 
     # DOC: https://developer.github.com/webhooks/event-payloads/
     if request.headers.get("X-GitHub-Event") == 'check_run':

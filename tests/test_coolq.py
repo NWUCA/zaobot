@@ -317,12 +317,12 @@ def test_cai(client):
         # assert callback.data != {}
 
 
-def test_send_to_tg(client, requests_mock):
-    TELEGRAM_API_ADDRESS = "https://telegram.coherence.codes"
-    TELEGRAM_API_TOKEN = "bot793455209:AAEXy1I4cpaaN5m_C9YNrT5qoRN3He3ULxk"
+def test_send_to_tg(client, requests_mock, config):
     callback = SimpleCallback()
-    requests_mock.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMessage", json=callback.handler)
-    requests_mock.post(f"{TELEGRAM_API_ADDRESS}/{TELEGRAM_API_TOKEN}/sendMediaGroup", json=callback.handler)
+    requests_mock.post(f"{config['TELEGRAM_API_ADDRESS']}/"
+                       f"{config['TELEGRAM_API_TOKEN']}/sendMessage", json=callback.handler)
+    requests_mock.post(f"{config['TELEGRAM_API_ADDRESS']}/"
+                       f"{config['TELEGRAM_API_TOKEN']}/sendMediaGroup", json=callback.handler)
 
     send(client, "我觉得还行", auto_prefix_slash=False)
     print(callback.data)
