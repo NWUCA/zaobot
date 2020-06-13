@@ -7,16 +7,17 @@ from . import directive, utils
 
 def create_app(config=None):
     app = Flask(__name__)
-    app.config.from_mapping(
-        DATABASE=os.path.join(app.instance_path, 'database.db')
-        # DATABASE='database.db'
-    )
-    app.config.from_pyfile(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
 
     if config:
         # load the config if passed in
         app.config.from_mapping(config)
-    print(os.getcwd())
+    else:
+        app.config.from_mapping(
+            DATABASE=os.path.join(app.instance_path, 'database.db')
+        )
+        app.config.from_pyfile(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
+
+    # print(os.getcwd())
     db.init_database(app)
 
     app.route('/', methods=['POST'])(handler)

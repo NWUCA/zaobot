@@ -98,7 +98,8 @@ def test_zao_db(app):
 
 
 def test_second_zao(client):
-    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00', user_id=101, card='no1'))
+    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00',
+                                                    user_id=101, card='no1'))
     assert '第2起床' in response.json['reply']
 
 
