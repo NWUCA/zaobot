@@ -5,6 +5,7 @@ import base64
 import time
 import re
 from flask import current_app
+from tenacity import retry, stop_after_attempt
 
 
 def reply(msg, at_sender=True):
@@ -254,16 +255,14 @@ def find_cai(context):
 
 
 # Telegram bot API doc: https://core.telegram.org/bots/api
-# TODO 考虑非200 和超时等 exception
+@retry(reraise=True, stop=stop_after_attempt(3))
 def tg_send_msg(text):
-    try:
-        requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
-                      f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMessage",
-                      json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "text": text}, timeout=5)
-    except requests.exceptions:
-        pass
+    requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
+                  f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMessage",
+                  json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "text": text}, timeout=5)
 
 
+@retry(reraise=True, stop=stop_after_attempt(3))
 def tg_send_media_group(text, photo_urls):
     """
     DOC: https://core.telegram.org/bots/api#sendmediagroup
@@ -271,13 +270,10 @@ def tg_send_media_group(text, photo_urls):
     """
     media = [{"type": "photo", "media": url} for url in photo_urls]
     media[0]["caption"] = text  # 插入消息内容
-    try:
-        requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
-                      f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMediaGroup",
-                      json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "media": media},
-                      timeout=5)
-    except requests.exceptions:
-        pass
+    requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
+                  f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMediaGroup",
+                  json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "media": media},
+                  timeout=5)
 
 
 def send_to_tg(context):
