@@ -3,6 +3,7 @@ import time
 from flask import Flask, request, abort, jsonify, current_app
 from . import db
 from . import directive, utils
+from .context import Context, PrivateContext, GroupContext
 
 
 def create_app(config=None):
@@ -45,41 +46,47 @@ def handler():
     if post_type != "message":
         abort(400)
 
+    if payload['message_type'] != 'group' and payload['message_type'] != 'private':
+        abort(400)
+
     if payload['message_type'] == 'group' and \
             payload['group_id'] not in current_app.config['ALLOWED_GROUP']:
         abort(400)
 
-    pre_process(payload)
+    if payload['message_type'] == 'group':
+        context = GroupContext(payload)
+    elif payload['message_type'] == 'private':
+        context = PrivateContext(payload)
 
-    raw_message = payload.get("message").strip()
-    if raw_message[0] == '/':
-        message = raw_message[1:].split()
-        command = message[0]
-        args = message[1:]
-        try:
-            # map command to directive.py and execute it.
-            response = getattr(directive, command)(payload, args)
-        except AttributeError as e:
-            print(e)
-            response = ''
-    else:
+    pre_process(context)
+
+    try:
+        # map command to directive.py and execute it.
+        response = getattr(directive, context.directive)(context)
+    except AttributeError as e:
+        # print(e)
         response = ''
+
     return jsonify(response) if isinstance(response, dict) else ''
 
 
 # TODO 异步执行
-def pre_process(payload):
-    utils.log(payload)
+def pre_process(context: Context):
+    utils.log(context)
     # utils.accumulate_exp(payload)
 
-    if payload['message_type'] == 'group':
-        utils.find_cai(payload)
-        if payload['group_id'] == current_app.config['FORWARDED_QQ_GROUP_ID']:
-            utils.send_to_tg(payload)
+    if context.message_type == 'group':
+        utils.find_cai(context)
+        if context.group_id == current_app.config['FORWARDED_QQ_GROUP_ID']:
+            utils.send_to_tg(context)
 
 
 def webhook_handler():
-    context = {"group_id": current_app.config['WEBHOOK_NOTIFICATION_GROUP'], "time": time.time()}
+    context = GroupContext({
+        'group_id': current_app.config['WEBHOOK_NOTIFICATION_GROUP'],
+        'time': time.time(),
+        'message': ''
+    })
 
     # DOC: https://developer.github.com/webhooks/event-payloads/
     if request.headers.get("X-GitHub-Event") == 'check_run':

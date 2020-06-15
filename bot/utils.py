@@ -1,43 +1,41 @@
-from .db import get_db
 from datetime import datetime, timedelta, date
-import requests
 import base64
 import time
 import re
+from typing import Union
+
+import requests
 from flask import current_app
 from tenacity import retry, stop_after_attempt
+
+from .db import get_db
+from .context import Context, GroupContext, PrivateContext
 
 
 def reply(msg, at_sender=True):
     now = datetime.now().timestamp()
     # 构造log所需的context
-    log({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
+    context = Context({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
+    log(context)
     return {'reply': msg, 'at_sender': at_sender}
 
 
-def log(context):
+def log(context: Context):
     c = get_db()
-    log_time = datetime.fromtimestamp(context['time'])
-    inserted_data = (context['message'], get_nickname(context),
-                     context['user_id'], context['time'], str(log_time))
+    log_time = datetime.fromtimestamp(context.time)
+    inserted_data = (context.message, context.name,
+                     context.user_id, context.time, str(log_time))
     c.execute("insert into log values (?,?,?,?,?)", inserted_data)
     c.commit()
-
-
-def get_nickname(context):
-    if context['sender'].get('card') is None:
-        return context['sender']['nickname']
-    else:
-        return context['sender']['card']
 
 
 class admin_required:
     def __init__(self, func):
         self.func = func
 
-    def __call__(self, *args, **kwargs):
-        if args[0]['sender'].get('role') == 'owner' or args[0]['sender'].get('role') == 'admin':
-            return self.func(*args, **kwargs)
+    def __call__(self, context: GroupContext):
+        if context.role in ('owner', 'admin'):
+            return self.func(context)
         else:
             return reply("你没有权限o(≧口≦)o")
 
@@ -48,15 +46,15 @@ class private_message_only:
     def __init__(self, func):
         self.func = func
 
-    def __call__(self, context, args):
-        if context['message_type'] != 'private':
+    def __call__(self, context: Context):
+        if context.message_type != 'private':
             if self.func.__doc__ is None:
                 rtn = f"使用 /{self.func.__name__} 指令。"
             else:
                 rtn = self.func.__doc__.strip()
             return reply(f"请私聊我{rtn}")
         else:
-            return self.func(context, args)
+            return self.func(context)
 
 
 def average_rest_time(valid_record: list, delta: int) -> str:
@@ -96,22 +94,21 @@ class Error(Exception):
         self.ret_code = ret_code
 
 
-def send(context, message, **kwargs):
-    context = context.copy()
-    context['message'] = message
-    context.update(kwargs)
-    if 'message_type' not in context:
-        if 'group_id' in context:
-            context['message_type'] = 'group'
-        elif 'discuss_id' in context:
-            context['message_type'] = 'discuss'
-        elif 'user_id' in context:
-            context['message_type'] = 'private'
+def send(context: Context, message):
+    payload = {
+        'message_type': context.message_type,
+        'message': message
+    }
 
-    log({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context['time'], 'user_id': 0})
+    if context.message_type == 'group':
+        payload['group_id'] = context.group_id
+    elif context.message_type == 'private':
+        payload['user_id'] = context.user_id
+
+    log(Context({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context.time, 'user_id': 0}))
 
     url = 'http://127.0.0.1:5700/send_msg'
-    resp = requests.post(url, json=context)
+    resp = requests.post(url, json=payload)
     if resp.ok:
         data = resp.json()
         if data.get('status') == 'failed':
@@ -134,28 +131,28 @@ xiuxian_level = (('筑基', 100),
                  ('渡劫', 7800))
 
 
-def start_xiuxian(context):
+def start_xiuxian(context: Context):
     c = get_db()
-    if not 0 <= datetime.fromtimestamp(context['time']).time().hour < 5:
+    if not 0 <= datetime.fromtimestamp(context.time).time().hour < 5:
         return
-    if c.execute(f'select * from xiuxian_emulator where id = {context["user_id"]}').fetchone() is None:
+    if c.execute(f'select * from xiuxian_emulator where id = {context.user_id}').fetchone() is None:
         c.execute('insert into xiuxian_emulator values (?,?,?,?,?,?)',
-                  (context['user_id'], get_nickname(context), 0, 0, '', ''))
+                  (context.user_id, context.name, 0, 0, '', ''))
         c.commit()
-        send(context, f'@{get_nickname(context)}，你已经成功筑基，一个新的世界已经对你敞开！')
+        send(context, f'@{context.name}，你已经成功筑基，一个新的世界已经对你敞开！')
         accumulate_exp(context)
 
 
-def accumulate_exp(context):
+def accumulate_exp(context: Context):
     c = get_db()
-    now_datetime = datetime.fromtimestamp(context['time'])
+    now_datetime = datetime.fromtimestamp(context.time)
     now_time = now_datetime.time()
     if not 0 <= now_time.hour < 8:
         return
-    user = c.execute(f'select * from xiuxian_emulator where id = {context["user_id"]}').fetchone()
+    user = c.execute(f'select * from xiuxian_emulator where id = {context.user_id}').fetchone()
     if user is not None:
         if user['last_speaking_timestamp'] == "" \
-                or date.fromtimestamp(user['last_speaking_timestamp']) != date.fromtimestamp(context['time']):
+                or date.fromtimestamp(user['last_speaking_timestamp']) != date.fromtimestamp(context.time):
             last_speaking_datetime = now_datetime.replace(hour=0, minute=0, second=0)
         else:
             last_speaking_datetime = datetime.fromtimestamp(user['last_speaking_timestamp'])
@@ -168,14 +165,14 @@ def accumulate_exp(context):
         exp = user['exp'] + elapsed_minute
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            send(context, f'@{get_nickname(context)}，'
+            send(context, f'@{context.name}，'
                           f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
             level += 1
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',
                   (level, exp, now_datetime.timestamp(), now_datetime.isoformat(), user['id']))
-        if get_nickname(context) != user['nickname']:
-            c.execute('update xiuxian_emulator set nickname=? where id=?', (get_nickname(context), user['id']))
+        if context.name != user['nickname']:
+            c.execute('update xiuxian_emulator set nickname=? where id=?', (context.name, user['id']))
         c.commit()
 
 
@@ -217,11 +214,11 @@ def ocr(base64_image):
 
 def find_cai(context):
     # 只针对环卫工有效
-    if context['user_id'] != 595811044:
+    if context.user_id != 595811044:
         return
 
     # Get image url
-    msg = context["message"]
+    msg = context.message
     images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
 
     ocr_result = []
@@ -233,16 +230,16 @@ def find_cai(context):
         content = requests.get(image_url).content
         ocr_result.append(ocr(base64.b64encode(content)))
 
-    text = " ".join([context["message"]] + ocr_result)
+    text = " ".join([context.message] + ocr_result)
 
     # re match
     cai_re = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
     if cai_re.search(text):
-        post_data = {"group_id": context["group_id"], "user_id": context["user_id"], "duration": 60 * 20}
+        post_data = {"group_id": context.group_id, "user_id": context.user_id, "duration": 60 * 20}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
 
         # delete message is only available in Coolq Pro
-        # post_data = {"message_id": context["message_id"]}
+        # post_data = {"message_id": context.message_id}
         # requests.post("http://localhost:5700/delete_msg", json=post_data)
 
         # substitute [CQ:...] to image url
@@ -251,7 +248,7 @@ def find_cai(context):
             return matched[2] + ' '
 
         processed_msg = re.sub(r"\[CQ:image,file=(.*?),url=(.*?)\]", sub, msg)
-        send(context, f"违规内容：{get_nickname(context)} {datetime.fromtimestamp(context['time'])} {processed_msg}")
+        send(context, f"违规内容：{context.name} {datetime.fromtimestamp(context.time)} {processed_msg}")
 
 
 # Telegram bot API doc: https://core.telegram.org/bots/api
@@ -276,13 +273,13 @@ def tg_send_media_group(text, photo_urls):
                   timeout=5)
 
 
-def send_to_tg(context):
-    group_card = context['sender'].get('card')
-    nickname = context['sender'].get('nickname')
+def send_to_tg(context: GroupContext):
+    group_card = context.group_card
+    nickname = context.nickname
     msg_prefix = f"[{group_card}({nickname})]:"
     image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
-    image_urls = list(map(lambda a: a[1], re.findall(image_re, context['message'])))
-    msg = re.sub(image_re, lambda a: " ", context['message'])
+    image_urls = list(map(lambda a: a[1], re.findall(image_re, context.message)))
+    msg = re.sub(image_re, lambda a: " ", context.message)
     if image_urls:
         tg_send_media_group(f"{msg_prefix} {msg}", image_urls)
     else:
