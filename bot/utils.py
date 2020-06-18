@@ -2,20 +2,18 @@ from datetime import datetime, timedelta, date
 import base64
 import time
 import re
-from typing import Union
 
 import requests
 from flask import current_app
 from tenacity import retry, stop_after_attempt
 
 from .db import get_db
-from .context import Context, GroupContext, PrivateContext
+from .context import Context, GroupContext
 
 
 def reply(msg, at_sender=True):
-    now = datetime.now().timestamp()
     # 构造log所需的context
-    context = Context({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
+    context = Context.build(msg)
     log(context)
     return {'reply': msg, 'at_sender': at_sender}
 
@@ -105,7 +103,7 @@ def send(context: Context, message):
     elif context.message_type == 'private':
         payload['user_id'] = context.user_id
 
-    log(Context({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context.time, 'user_id': 0}))
+    log(Context.build(message, time_=context.time))
 
     url = 'http://127.0.0.1:5700/send_msg'
     resp = requests.post(url, json=payload)
@@ -209,7 +207,10 @@ def ocr(base64_image):
                   f"access_token={baidu_ai_auth['access_token']}"
     response = requests.post(request_url, data=params,
                              headers={'content-type': 'application/x-www-form-urlencoded'})
-    return " ".join(map(lambda a: a['words'], response.json()["words_result"]))
+    if response.json().get('words_result') is not None:
+        return " ".join(map(lambda a: a['words'], response.json()["words_result"]))
+    else:
+        return ""
 
 
 def find_cai(context):

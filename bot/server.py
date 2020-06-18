@@ -63,8 +63,7 @@ def handler():
     try:
         # map command to directive.py and execute it.
         response = getattr(directive, context.directive)(context)
-    except AttributeError as e:
-        # print(e)
+    except AttributeError:
         response = ''
 
     return jsonify(response) if isinstance(response, dict) else ''

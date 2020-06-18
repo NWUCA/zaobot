@@ -1,18 +1,34 @@
 import abc
+import time
+from numbers import Rational
 
 
 class Context(abc.ABC):
     def __init__(self, payload):
         self.message = payload['message'].strip()
-        self.message_id = payload.get('message_id')  # could be empty due to internal constructed object
+        self.message_id = payload['message_id']
         if self.message[0] == '/':
             message = self.message[1:].split()
             # May have Attribute Error, cause Context doesn't always have these attributes
             self.directive = message[0]
             self.args = message[1:]
-        self.user_id = payload.get('user_id')
+        self.user_id = payload['user_id']
         self.time = payload['time']
         self.nickname = payload['sender'].get('nickname')
+        self.message_type = None
+
+    @classmethod
+    def build(cls, message, time_: Rational = None, user_id=None, nickname=None):
+        """Secondary construct method, construct a context from messages sent by zaobot"""
+        return cls({
+            'message': message,
+            'message_id': -1,
+            'time': time_ if time_ is not None else time.time(),
+            'user_id': user_id if user_id is not None else 0,
+            'sender': {
+                'nickname': nickname if nickname is not None else 'zaobot'
+            }
+        })
 
     @property
     def name(self):
