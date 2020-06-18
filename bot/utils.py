@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, date
 import base64
 import time
 import re
+import random
 
 import requests
 from flask import current_app
@@ -285,3 +286,17 @@ def send_to_tg(context: GroupContext):
         tg_send_media_group(f"{msg_prefix} {msg}", image_urls)
     else:
         tg_send_msg(f"{msg_prefix} {msg}")
+
+
+def randomly_save_message_to_treehole(context: Context):
+    c = get_db()
+    image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
+    if re.findall(image_re, context.message):
+        # Do not handle a message with images
+        return
+    elif random.random() < 0.001:  # 1/1000
+        timestamp = context.time
+        readable_time = datetime.fromtimestamp(timestamp)
+        c.execute("insert into treehole values (?,?,?,?,?)",
+                  (context.message, timestamp, readable_time, context.name, context.user_id))
+        c.commit()

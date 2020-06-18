@@ -338,3 +338,21 @@ def test_send_to_tg(client, requests_mock, config):
            [{'type': 'photo', 'media': 'https://www.baidu.com/img/bd_logo1.png',
              'caption': '[test_card(test_nickname)]:  '}]
     print(callback.data)
+
+
+def test_randomly_save_message_to_treehole(app):
+    # we don't use HTTP client because it's too slow
+    from bot.utils import randomly_save_message_to_treehole
+    from bot.context import GroupContext
+    data = data_generator('foobar', auto_prefix_slash=False)
+    context = GroupContext(data)
+
+    with app.app_context():
+        # Though we iterate it 10000 times, it still has chance to fail
+        for _ in range(10000):
+            randomly_save_message_to_treehole(context)
+
+        db = get_db()
+        res = db.execute('select * from treehole').fetchall()
+        print("Len =", len(res))
+        assert len(res) != 0
