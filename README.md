@@ -9,25 +9,6 @@ and its [Python SDK](https://github.com/cqmoe/python-cqhttp).
 See the reference project above.
 The entrance file is *bot/server.py*.
 
-## Technical structure
-The bot is built on Coolq and Coolq HTTP API.
-
-### Dependencies
-| Library | Description|
-| ------- |  --------  |
-|flask| this bot's web server|
-|requests| interact with Coolq HTTP API|
-|pytest| test framework|
-|requests_mock| intercept HTTP requests|
-
-### Development dependencies
-| Library | Description|
-| ------- |  --------  |
-|pytest| test framework|
-|requests_mock| intercept HTTP requests|
-|flake8| code style check tools|
-
-## How to contribute
 1. Clone this repository and install dependencies.
     ```shell script
     git clone https://github.com/NWUCA/zaobot.git
@@ -39,12 +20,16 @@ The bot is built on Coolq and Coolq HTTP API.
 
     Mostly you just need to modify `bot/directive.py` (to add directives) and `tests/test_coolq.py` (to add tests).
     
-    Basically each function needs a test.
+    Basically, each function needs a test.
     
-    To start a server:
+    To start a server, first you need to write a config file like `tests/test_settings.py`, put it in the root 
+    directory of this project, then run:
     ```shell script
     ./run.sh
     ```
+   But your config file may cause a problem because you do not have appropriate API keys (indeed you can apply
+   for your own API keys, but apparently this can cost a lot of time). So maybe you could just rely on pytest
+   to debug and test everything.
    
 3. Run tests.
     ```shell script
@@ -54,5 +39,47 @@ The bot is built on Coolq and Coolq HTTP API.
     ```shell script
     flake8 --max-line-length 127
     ```
-   
-4. Make a pull request.
+
+## Technical structure
+The bot is built on Coolq and Coolq HTTP API.
+
+### Repository anatomy
+```
+├── bot  # bot source code
+│   ├── context.py  # message context abstraction
+│   ├── db.py  # handles db operations
+│   ├── directive.py  # contains all the directives
+│   ├── __init__.py
+│   ├── schema.sql  # database table structure
+│   ├── server.py  # handles flask
+│   └── utils.py  # functions used in other files
+├── instance
+│   └── database.db  # database file lives here
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── run.sh
+├── settings.cfg  # global config file
+└── tests  # all the tests
+    ├── conftest.py  # contains pytest config and custom fixtures
+    ├── test_coolq.py  # for now, all the tests are in this file
+    ├── test_data.json  # unused, may be removed in the future
+    ├── test.json  # what request data looks like, this is what COOLQ HTTP API offers
+    └── test_settings.cfg  # config file for tests
+```
+
+### Dependencies
+| Library | Description|
+| ------- |  --------  |
+|flask| this bot's web server|
+|requests| interact with Coolq HTTP API|
+
+### Development dependencies
+| Library | Description|
+| ------- |  --------  |
+|pytest| test framework|
+|requests_mock| intercept HTTP requests|
+|flake8| code style check tools|
+
+## How to contribute
+Feel free to make an issue or a pull request.

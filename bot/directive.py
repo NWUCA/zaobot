@@ -6,11 +6,11 @@ from datetime import date, datetime, timedelta
 
 import requests
 
-from .db import get_db
-from .utils import reply, average_rest_time
-from .utils import xiuxian_level
-from .utils import admin_required, private_message_only
-from .context import Context
+from bot.db import get_db
+from bot.utils import reply, average_rest_time
+from bot.utils import xiuxian_level
+from bot.utils import admin_required, private_message_only
+from bot.context import Context
 
 
 def help(context):
