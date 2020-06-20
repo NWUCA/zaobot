@@ -1,5 +1,4 @@
 import os
-import time
 from flask import Flask, request, abort, jsonify, current_app
 from . import db
 from . import directive, utils
@@ -72,7 +71,7 @@ def handler():
 # TODO 异步执行
 def pre_process(context: Context):
     utils.log(context)
-    # utils.accumulate_exp(payload)
+    utils.accumulate_exp(context)
 
     if context.message_type == 'group':
         utils.find_cai(context)
@@ -81,11 +80,7 @@ def pre_process(context: Context):
 
 
 def webhook_handler():
-    context = GroupContext({
-        'group_id': current_app.config['WEBHOOK_NOTIFICATION_GROUP'],
-        'time': time.time(),
-        'message': ''
-    })
+    context = GroupContext.build('', group_id=current_app.config['WEBHOOK_NOTIFICATION_GROUP'])
 
     # DOC: https://developer.github.com/webhooks/event-payloads/
     if request.headers.get("X-GitHub-Event") == 'check_run':

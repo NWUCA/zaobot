@@ -8,7 +8,7 @@ import requests
 
 from bot.db import get_db
 from bot.utils import reply, average_rest_time
-from bot.utils import xiuxian_level
+from bot.utils import xiuxian_level, start_xiuxian
 from bot.utils import admin_required, private_message_only
 from bot.context import Context
 
@@ -51,7 +51,7 @@ def zao(context: Context):
 
 def wan(context: Context):
     c = get_db()
-    # start_xiuxian(context)
+    start_xiuxian(context)
     current_user = c.execute(f'select wake_timestamp from rest_record '
                              f'where id ={context.user_id} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
     current_time = datetime.fromtimestamp(context.time)

@@ -134,7 +134,6 @@ def test_admin(client):
 def test_zaoguys(client):
     response = client.post('/', json=data_generator('zaoguys', time='2019-12-01 22:00:00'))
     print(response.json)
-    assert 1
 
 
 def test_ask(client):
@@ -183,22 +182,23 @@ class MessageHandler:
         return request.json()
 
 
-# def test_xiuxian(client, requests_mock):
-#     r = MessageHandler()
-#     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
-#
-#     send(client, 'wan', time='2019-12-04 01:00:00')
-#     assert '成功筑基' in r.message
-#
-#     send(client, 'anything', time='2019-12-04 04:00:00')
-#     assert '突破了' in r.message
-#     print(r.message)
-#
-#
-# def test_xiuxian_ranking(client):
-#     response = send(client, 'xiuxian_ranking')
-#     print(response)
-#     assert 'test_card' in response
+def test_xiuxian(client, requests_mock):
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+
+    send(client, 'wan', time='2019-12-04 01:00:00')
+    assert '成功筑基' in r.message
+
+    send(client, 'anything', time='2019-12-04 04:00:00')
+    assert '突破了' in r.message
+    print(r.message)
+
+
+def test_xiuxian_ranking(client):
+    response = send(client, 'xiuxian_ranking')
+    print(response)
+    assert 'test_card' in response
+
 
 def test_abbreviation_query(client, requests_mock):
     class Callback:
@@ -356,3 +356,30 @@ def test_randomly_save_message_to_treehole(app):
         res = db.execute('select * from treehole').fetchall()
         print("Len =", len(res))
         assert len(res) != 0
+
+
+def test_webhook(client, requests_mock):
+    data = {
+        'commits': [
+            {'id': '1234567', 'message': "test1"},
+            {'id': '2345678', 'message': "test2"},
+        ],
+        'sender': {
+            'login': 'user1'
+        }
+    }
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'push'})
+    print(r.message)
+    assert 'user1 has pushed 2 commit(s)' in r.message
+    data = {
+        'action': 'completed',
+        'check_run': {
+            'name': 'test',
+            'conclusion': 'success'
+        }
+    }
+    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'check_run'})
+    print(r.message)
+    assert 'CI job test has completed: success' in r.message
