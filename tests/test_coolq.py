@@ -349,8 +349,7 @@ def test_randomly_save_message_to_treehole(app):
     context = GroupContext(data)
 
     with app.app_context():
-        # Though we iterate it 10000 times, it still has chance to fail
-        for _ in range(10000):
+        for _ in range(1000):
             randomly_save_message_to_treehole(context)
 
         db = get_db()

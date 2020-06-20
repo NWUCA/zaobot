@@ -293,7 +293,7 @@ def randomly_save_message_to_treehole(context: Context):
     if re.findall(image_re, context.message):
         # Do not handle a message with images
         return
-    elif random.random() < 0.001:  # 1/1000
+    elif random.random() < current_app.config['RANDOMLY_SAVE_TO_TREEHOLE_RATE']:
         timestamp = context.time
         readable_time = datetime.fromtimestamp(timestamp)
         c.execute("insert into treehole values (?,?,?,?,?)",
