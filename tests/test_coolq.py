@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 import sqlite3
-# from pprint import pprint
+from pprint import pprint
 from bot.db import get_db
 
 
@@ -80,8 +80,9 @@ def test_invalid_request(client):
 
 def test_help(client):
     response = client.post('/', json=data_generator('help'))
-    print(response.json)
+    pprint(response.json)
     assert 'github' in response.json['reply']
+    assert '/zao' in response.json['reply']
 
 
 def test_zao(client):

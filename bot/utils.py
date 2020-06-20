@@ -3,13 +3,14 @@ import base64
 import time
 import re
 import random
+import functools
 
 import requests
 from flask import current_app
 from tenacity import retry, stop_after_attempt
 
-from .db import get_db
-from .context import Context, GroupContext
+from bot.db import get_db
+from bot.context import Context, GroupContext
 
 
 def reply(msg, at_sender=True):
@@ -28,32 +29,30 @@ def log(context: Context):
     c.commit()
 
 
-class admin_required:
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, context: GroupContext):
-        if context.role in ('owner', 'admin'):
-            return self.func(context)
+def admin_required(func):
+    """指令需要管理员权限的装饰器"""
+    @functools.wraps(func)
+    def check_permission(directive):
+        if directive.context.role in ('owner', 'admin'):
+            return func(directive)
         else:
             return reply("你没有权限o(≧口≦)o")
+    return check_permission
 
 
-class private_message_only:
+def private_message_only(func):
     """仅限私聊指令的装饰器"""
-
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, context: Context):
-        if context.message_type != 'private':
-            if self.func.__doc__ is None:
-                rtn = f"使用 /{self.func.__name__} 指令。"
+    @functools.wraps(func)
+    def check_message_type(directive):
+        if directive.context.message_type != 'private':
+            if func.__doc__ is None:
+                rtn = f"使用 /{func.__name__} 指令。"
             else:
-                rtn = self.func.__doc__.strip()
+                rtn = func.__doc__.strip()
             return reply(f"请私聊我{rtn}")
         else:
-            return self.func(context)
+            return func(directive)
+    return check_message_type
 
 
 def average_rest_time(valid_record: list, delta: int) -> str:

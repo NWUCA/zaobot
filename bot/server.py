@@ -1,8 +1,9 @@
 import os
 from flask import Flask, request, abort, jsonify, current_app
-from . import db
-from . import directive, utils
-from .context import Context, PrivateContext, GroupContext
+from bot import db
+from bot import utils
+from bot.directive import Directive
+from bot.context import Context, PrivateContext, GroupContext
 
 
 def create_app(config=None):
@@ -59,10 +60,14 @@ def handler():
 
     pre_process(context)
 
+    # map command to Directive class and execute it.
     try:
-        # map command to directive.py and execute it.
-        response = getattr(directive, context.directive)(context)
-    except AttributeError:
+        if hasattr(Directive, context.directive):
+            obj = Directive(context)
+            response = getattr(obj, context.directive)()
+        else:
+            response = ''
+    except AttributeError:  # if a message is not a directive
         response = ''
 
     return jsonify(response) if isinstance(response, dict) else ''
