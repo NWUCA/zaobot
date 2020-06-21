@@ -156,6 +156,8 @@ def accumulate_exp(context: Context):
             last_speaking_datetime = datetime.fromtimestamp(user['last_speaking_timestamp'])
 
         delta = now_datetime - last_speaking_datetime
+        if delta.total_seconds() < 60:  # This may reduce database updates
+            return
         if now_time.hour < 5 or (timedelta(minutes=1) <= delta < timedelta(hours=3)):
             elapsed_minute = int(delta.total_seconds() / 60)
         else:

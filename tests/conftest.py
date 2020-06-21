@@ -20,6 +20,8 @@ def app():
 def mock_send_to_tg(requests_mock, app):
     requests_mock.post(f"{app.config['TELEGRAM_API_ADDRESS']}/"
                        f"{app.config['TELEGRAM_API_TOKEN']}/sendMessage")
+    requests_mock.post(f"{app.config['TELEGRAM_API_ADDRESS']}/"
+                       f"{app.config['TELEGRAM_API_TOKEN']}/sendMediaGroup")
 
 
 @pytest.fixture(scope='session')

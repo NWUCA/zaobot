@@ -1,7 +1,10 @@
-import pytest
 from datetime import datetime
 import sqlite3
 from pprint import pprint
+import re
+
+import pytest
+
 from bot.db import get_db
 
 
@@ -269,54 +272,55 @@ class SimpleCallback:
         return self.data
 
 
-def test_cai(client):
+def test_cai(client, requests_mock):
     callback = SimpleCallback()
+    matcher = re.compile('baidu|loli.net')
 
-    import requests_mock
-    with requests_mock.Mocker(real_http=True) as m:
-        # m.post("/delete_msg", json=callback.handler)
-        m.post("/set_group_ban", json=callback.handler)
+    requests_mock.register_uri('GET', matcher, real_http=True)
+    requests_mock.register_uri('POST', matcher, real_http=True)
 
-        def send_msg_callback(request, context):
-            # print(request.json())
-            assert "违规内容" in request.json()['message']
-            return {"data": "success"}
+    requests_mock.post("/set_group_ban", json=callback.handler)
+    # m.post("/delete_msg", json=callback.handler)
 
-        m.post("/send_msg", json=send_msg_callback)
+    def send_msg_callback(request, context):
+        # print(request.json())
+        assert "违规内容" in request.json()['message']
+        return {"data": "success"}
 
-        send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False)
-        assert callback.data != {}
+    requests_mock.post("/send_msg", json=send_msg_callback)
 
-        # send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False, message_type='private')
-        # assert callback.data == {}
-        #
-        # send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
-        # assert callback.data != {}
-        #
-        # callback.data = {}
-        # send(client, "我觉得还行", auto_prefix_slash=False)
-        # assert callback.data == {}
-        #
-        # send(client,
-        #      "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-        #      "url=https://www.baidu.com/img/bd_logo1.png]",
-        #      user_id=1195944745,
-        #      auto_prefix_slash=False)
-        # assert callback.data == {}
-        #
-        # callback.data = {}
-        # send(client,
-        #      "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-        #      "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-        #      auto_prefix_slash=False)
-        # assert callback.data != {}
-        #
-        # callback.data = {}
-        # send(client,
-        #      "哈哈哈哈 [CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-        #      "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-        #      auto_prefix_slash=False)
-        # assert callback.data != {}
+    send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False)
+    assert callback.data != {}
+
+    callback.data = {}
+    send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False, message_type='private')
+    assert callback.data == {}
+
+    send(client, "我觉得还行", auto_prefix_slash=False)
+    assert callback.data == {}
+
+    send(client,
+         "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://www.baidu.com/img/bd_logo1.png]",
+         user_id=595811044,
+         auto_prefix_slash=False)
+    assert callback.data == {}
+
+    callback.data = {}
+    send(client,
+         "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+         user_id=595811044,
+         auto_prefix_slash=False)
+    assert callback.data != {}
+
+    callback.data = {}
+    send(client,
+         "哈哈哈哈 [CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+         user_id=595811044,
+         auto_prefix_slash=False)
+    assert callback.data != {}
 
 
 def test_send_to_tg(client, requests_mock, config):
