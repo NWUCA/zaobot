@@ -291,13 +291,12 @@ def send_to_tg(context: GroupContext):
 
 def randomly_save_message_to_treehole(context: Context):
     c = get_db()
-    image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
-    if re.findall(image_re, context.message):
-        # Do not handle a message with images
+    message = re.sub(r"\[CQ:image.*?\]", '', context.message).strip()
+    if message == "":
         return
-    elif random.random() < current_app.config['RANDOMLY_SAVE_TO_TREEHOLE_RATE']:
+    if random.random() < current_app.config['RANDOMLY_SAVE_TO_TREEHOLE_RATE']:
         timestamp = context.time
         readable_time = datetime.fromtimestamp(timestamp)
         c.execute("insert into treehole values (?,?,?,?,?)",
-                  (context.message, timestamp, readable_time, context.name, context.user_id))
+                  (message, timestamp, readable_time, context.name, context.user_id))
         c.commit()
