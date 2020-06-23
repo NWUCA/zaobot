@@ -105,13 +105,7 @@ def webhook_handler():
 
     # DOC: https://developer.github.com/webhooks/event-payloads/
     payload = request.json
-    if request.headers.get("X-GitHub-Event") == 'check_run':
-        if payload['action'] != "completed":
-            return ""
-        check_run = payload['check_run']
-        message = f"CI job {check_run['name']} has completed: {check_run['conclusion']}."
-        utils.send(context, message)
-    elif request.headers.get("X-GitHub-Event") == 'push':
+    if request.headers.get("X-GitHub-Event") == 'push':
         commits = payload['commits']
         message = f"{payload['sender']['login']} has pushed {len(commits)} commit(s)" \
                   f" to my repository:"
@@ -119,8 +113,8 @@ def webhook_handler():
             message += f"\n{commit['id'][:6]} {commit['message']}"
         utils.send(context, message)
     elif request.headers.get("X-GitHub-Event") == 'pull_request':
-        message = f"{payload['sender']['login']} has {payload['action']} a pull request " \
-                  f"{payload['pull_request']['title']}. " \
-                  f"For details see: {payload['pull_request']['url']}"
+        message = f"{payload['sender']['login']} has {payload['action']} a pull request: " \
+                  f"{payload['pull_request']['title']}.\n" \
+                  f"For details see: {payload['pull_request']['html_url']}"
         utils.send(context, message)
     return ""
