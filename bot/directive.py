@@ -2,6 +2,7 @@
 zaobot的所有指令
 """
 import random
+import os
 from datetime import date, datetime, timedelta
 
 import requests
@@ -225,3 +226,22 @@ class Directive:
         """彩虹屁"""
         r = requests.get('https://chp.shadiao.app/api.php')
         return reply(r.text, at_sender=True)
+
+    def setky(self):
+        try:
+            kydate = self.context.args[0]
+            if len(kydate) != 8:
+                raise ValueError
+            os.environ["KY_DATE"] = kydate
+            return reply("设置成功", at_sender=True)
+        except (IndexError, ValueError):
+            return reply("考研时间格式必须为yyyyMMdd")
+
+    def ky(self):
+        try:
+            ky_date_str = os.environ["KY_DATE"]
+            ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
+            days_to_ky = ky_date - date.today()
+            return reply(f"距离{ky_date_str[:4]}年度考研还有还有{days_to_ky}天")
+        except KeyError:
+            return reply(os.environ.get("KY_DATE", "异常，请联系管理员重置考研时间"), at_sender=False)
