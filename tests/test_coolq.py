@@ -401,4 +401,4 @@ def test_setky(client):
 
 
 def test_ky_2(client):
-    assert "年度考研还有还有" in send(client, 'ky')
+    assert "年度研究生考试还有" in send(client, 'ky')
