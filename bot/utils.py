@@ -266,7 +266,7 @@ def tg_send_msg(text):
 def tg_send_media_group(text, photo_urls):
     """
     DOC: https://core.telegram.org/bots/api#sendmediagroup
-    文档上写 media 必须是2-10个元素的 array，实际一个元素也可
+    文档上写 media 必须是2-10个元素的 array，实际一个元素也可以。
     """
     media = [{"type": "photo", "media": url} for url in photo_urls]
     media[0]["caption"] = text  # 插入消息内容
