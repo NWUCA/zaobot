@@ -18,6 +18,8 @@ def create_app(config=None):
         app.config.from_mapping(
             DATABASE=os.path.join(app.instance_path, 'database.db')
         )
+        if not os.path.exists(app.instance_path):
+            os.mkdir(app.instance_path)
         app.config.from_pyfile(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
 
     # print(os.getcwd())
@@ -44,9 +46,9 @@ def init_ky_reminder(config):
     try:
         ky_date_str = os.environ["KY_DATE"]
         ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
-        days_to_ky = ky_date - date.today()
+        days_to_ky = (ky_date - date.today()).days
         send(GroupContext.build(group_id=config["KY_NOTIFY_GROUP"]),
-             message=f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky.days}天")
+             message=f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
     except KeyError:
         send(GroupContext.build(group_id=config["KY_NOTIFY_GROUP"]),
              message="管理员还未设定考研时间，使用 /setky 设定考研时间")
@@ -102,19 +104,23 @@ def webhook_handler():
     context = GroupContext.build('', group_id=current_app.config['WEBHOOK_NOTIFICATION_GROUP'])
 
     # DOC: https://developer.github.com/webhooks/event-payloads/
+    payload = request.json
     if request.headers.get("X-GitHub-Event") == 'check_run':
-        payload = request.json
         if payload['action'] != "completed":
             return ""
         check_run = payload['check_run']
         message = f"CI job {check_run['name']} has completed: {check_run['conclusion']}."
         utils.send(context, message)
     elif request.headers.get("X-GitHub-Event") == 'push':
-        payload = request.json
         commits = payload['commits']
         message = f"{payload['sender']['login']} has pushed {len(commits)} commit(s)" \
                   f" to my repository:"
         for commit in commits:
             message += f"\n{commit['id'][:6]} {commit['message']}"
+        utils.send(context, message)
+    elif request.headers.get("X-GitHub-Event") == 'pull_request':
+        message = f"{payload['sender']['login']} has {payload['action']} a pull request " \
+                  f"{payload['pull_request']['title']}. " \
+                  f"For details see: {payload['pull_request']['url']}"
         utils.send(context, message)
     return ""

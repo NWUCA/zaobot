@@ -378,6 +378,7 @@ def test_webhook(client, requests_mock):
     client.post('/webhook', json=data, headers={'X-GitHub-Event': 'push'})
     print(r.message)
     assert 'user1 has pushed 2 commit(s)' in r.message
+
     data = {
         'action': 'completed',
         'check_run': {
@@ -388,6 +389,20 @@ def test_webhook(client, requests_mock):
     client.post('/webhook', json=data, headers={'X-GitHub-Event': 'check_run'})
     print(r.message)
     assert 'CI job test has completed: success' in r.message
+
+    data = {
+        "action": "opened",
+        "pull_request": {
+            "url": "fake_url",
+            "title": "foo",
+        },
+        'sender': {
+            'login': 'user1'
+        }
+    }
+    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'pull_request'})
+    print(r.message)
+    assert 'user1 has opened a pull request foo. For details see: fake_url' in r.message
 
 
 def test_ky_1(client):
