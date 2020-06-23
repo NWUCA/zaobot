@@ -280,6 +280,7 @@ def test_cai(client, requests_mock):
     requests_mock.register_uri('POST', matcher, real_http=True)
 
     requests_mock.post("/set_group_ban", json=callback.handler)
+
     # m.post("/delete_msg", json=callback.handler)
 
     def send_msg_callback(request, context):
@@ -387,3 +388,17 @@ def test_webhook(client, requests_mock):
     client.post('/webhook', json=data, headers={'X-GitHub-Event': 'check_run'})
     print(r.message)
     assert 'CI job test has completed: success' in r.message
+
+
+def test_ky_1(client):
+    assert "异常，请联系管理员重置考研时间" in send(client, 'ky')
+
+
+def test_setky(client):
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky')
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky 1231')
+    assert "设置成功" in send(client, 'setky 20201122')
+
+
+def test_ky_2(client):
+    assert "年度考研还有还有" in send(client, 'ky')

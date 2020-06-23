@@ -53,7 +53,7 @@ class GroupContext(Context):
         self.role = payload['sender'].get('role')
 
     @classmethod
-    def build(cls, message, time_: Rational = None, user_id=None, nickname=None, group_id=None):
+    def build(cls, message="", time_: Rational = None, user_id=None, nickname=None, group_id=None):
         return cls({
             'message': message,
             'message_id': -1,

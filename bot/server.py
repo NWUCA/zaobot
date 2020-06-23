@@ -4,6 +4,8 @@ from bot import db
 from bot import utils
 from bot.directive import Directive
 from bot.context import Context, PrivateContext, GroupContext
+from apscheduler.schedulers.background import BackgroundScheduler
+from .utils import send
 
 
 def create_app(config=None):
@@ -26,7 +28,28 @@ def create_app(config=None):
 
     app.teardown_appcontext(db.close_db)
 
+    init_background_tasks(app.config)
+
     return app
+
+
+def init_background_tasks(config):
+    apsched = BackgroundScheduler()
+    apsched.add_job(init_ky_reminder, args=[config], trigger='cron', hour=7, minute=0)
+    apsched.start()
+
+
+def init_ky_reminder(config):
+    from datetime import date
+    try:
+        ky_date_str = os.environ["KY_DATE"]
+        ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
+        days_to_ky = ky_date - date.today()
+        for group in config["ALLOWED_GROUP"]:
+            send(GroupContext.build(group_id=group), message=f"距离{ky_date_str[:4]}年度考研还有还有{days_to_ky}天")
+    except KeyError:
+        for group in config["ALLOWED_GROUP"]:
+            send(GroupContext.build(group_id=group), message="管理员还未设定考研时间，使用 /setky 设定考研时间")
 
 
 def handler():
