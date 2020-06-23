@@ -395,10 +395,10 @@ def test_ky_1(client):
 
 
 def test_setky(client):
-    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky')
-    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky 1231')
-    assert "设置成功" in send(client, 'setky 20201122')
+    assert "你没有权限" in send(client, 'setky')
+    assert "你没有权限" in send(client, 'setky 1231')
+    assert "你没有权限" in send(client, 'setky 20201122')
 
 
 def test_ky_2(client):
-    assert "年度研究生考试还有" in send(client, 'ky')
+    assert "异常，请联系管理员重置考研时间" in send(client, 'ky')
