@@ -44,12 +44,14 @@ def init_ky_reminder(config):
     try:
         ky_date_str = os.environ["KY_DATE"]
         ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
-        days_to_ky = ky_date - date.today()
-        for group in config["ALLOWED_GROUP"]:
-            send(GroupContext.build(group_id=group), message=f"距离{ky_date_str[:4]}年度考研还有还有{days_to_ky}天")
+        days_to_ky = (ky_date - date.today()).days
+        for group, name in config["ALLOWED_GROUP"].items():
+            if '考研' in name:
+                send(GroupContext.build(group_id=group), message=f"距离{ky_date_str[:4]}年度考研还有{days_to_ky}天")
     except KeyError:
-        for group in config["ALLOWED_GROUP"]:
-            send(GroupContext.build(group_id=group), message="管理员还未设定考研时间，使用 /setky 设定考研时间")
+        for group, name in config["ALLOWED_GROUP"].items():
+            if '考研' in name:
+                send(GroupContext.build(group_id=group), message="管理员还未设定考研时间，使用 /setky 设定考研时间")
 
 
 def handler():
