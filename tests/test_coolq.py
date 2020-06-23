@@ -378,6 +378,7 @@ def test_webhook(client, requests_mock):
     client.post('/webhook', json=data, headers={'X-GitHub-Event': 'push'})
     print(r.message)
     assert 'user1 has pushed 2 commit(s)' in r.message
+
     data = {
         'action': 'completed',
         'check_run': {
@@ -389,15 +390,29 @@ def test_webhook(client, requests_mock):
     print(r.message)
     assert 'CI job test has completed: success' in r.message
 
+    data = {
+        "action": "opened",
+        "pull_request": {
+            "url": "fake_url",
+            "title": "foo",
+        },
+        'sender': {
+            'login': 'user1'
+        }
+    }
+    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'pull_request'})
+    print(r.message)
+    assert 'user1 has opened a pull request foo. For details see: fake_url' in r.message
+
 
 def test_ky_1(client):
     assert "异常，请联系管理员重置考研时间" in send(client, 'ky')
 
 
 def test_setky(client):
-    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky')
-    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky 1231')
-    assert "设置成功" in send(client, 'setky 20201122')
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky', role='admin')
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky 1231', role='admin')
+    assert "设置成功" in send(client, 'setky 20201122', role='admin')
 
 
 def test_ky_2(client):

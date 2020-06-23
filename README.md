@@ -73,6 +73,8 @@ The bot is built on Coolq and Coolq HTTP API.
 | ------- |  --------  |
 |flask| this bot's web server|
 |requests| interact with Coolq HTTP API|
+|tenacity | retry library|
+|APScheduler| scheduled tasks|
 
 ### Development dependencies
 | Library | Description|
