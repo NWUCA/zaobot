@@ -6,6 +6,7 @@ import os
 from datetime import date, datetime, timedelta
 
 import requests
+from flask import session
 
 from bot.db import get_db
 from bot.utils import reply, average_rest_time
@@ -252,3 +253,10 @@ class Directive:
             return reply(f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
         except KeyError:
             return reply(os.environ.get("KY_DATE", "异常，请联系管理员重置考研时间"), at_sender=False)
+
+    def test_session(self):
+        if session.get('test'):
+            return reply(session['test'])
+        else:
+            session['test'] = 'Hello, World!'
+            return reply("Setting session...")
