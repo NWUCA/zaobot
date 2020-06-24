@@ -233,8 +233,14 @@ class Directive:
             kydate = self.context.args[0]
             if len(kydate) != 8:
                 raise ValueError
-            os.environ["KY_DATE"] = kydate
-            return reply("设置成功", at_sender=True)
+            import subprocess
+            rtc = subprocess.call(["echo", f"'export KY_DATE={kydate}'", ">>", "/etc/profile"], shell=True)
+            if rtc == 0:
+                rtc = subprocess.call(["source", "/etc/profile"], shell=True)
+            if rtc == 0:
+                return reply("设置成功")
+            else:
+                return reply("设置失败")
         except (IndexError, ValueError):
             return reply("考研时间格式必须为yyyyMMdd")
 
@@ -243,6 +249,6 @@ class Directive:
             ky_date_str = os.environ["KY_DATE"]
             ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
             days_to_ky = (ky_date - date.today()).days
-            return reply(f"距离{ky_date_str[:4]}年度考研还有{days_to_ky}天")
+            return reply(f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
         except KeyError:
             return reply(os.environ.get("KY_DATE", "异常，请联系管理员重置考研时间"), at_sender=False)
