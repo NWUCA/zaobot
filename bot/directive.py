@@ -153,12 +153,12 @@ class Directive:
         return reply(msg)
 
     def dig(self):
-        """Under construction"""
-        # total_length = r.llen('secrets')
-        # rand = random.randrange(total_length)
-        # secret = r.lrange('secrets', rand, rand)[0]
-        # return reply("某个人说：" + secret, False)
-        return reply("")
+        """随机从树洞取一条消息"""
+        c = get_db()
+        length = c.execute('select count(*) from treehole').fetchone()[0]
+        rand = random.randrange(length)
+        secret = c.execute(f'select message from treehole limit 1 offset {rand}').fetchone()['message']
+        return reply("某个人说：" + secret, at_sender=False)
 
     @admin_required
     def flush(self):

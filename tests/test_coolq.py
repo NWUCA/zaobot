@@ -98,7 +98,6 @@ def test_zao_db(app):
         c = get_db()
         res = c.execute("select * from rest_record").fetchone()
         print(tuple(res))
-        assert 1
 
 
 def test_second_zao(client):
@@ -146,9 +145,17 @@ def test_ask(client):
     assert "说一个二元问题" in send(client, 'ask')
 
 
-def test_say(client):
+def test_say(client, app):
     assert "你必须说点什么" in send(client, 'say')
     assert "我记在脑子里啦" in send(client, 'say anything')
+    with app.app_context():
+        db = get_db()
+        res = db.execute('select * from treehole').fetchall()
+        assert len(res) != 0
+
+
+def test_dig(client):
+    assert "某个人说：" in send(client, 'dig')
 
 
 def test_private_only_decorator(client):
