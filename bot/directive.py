@@ -239,7 +239,7 @@ class Directive:
             if data is None:
                 c.execute('insert into misc values ("ky_date", ?)', (ky_date_str, ))
             else:
-                c.execute('update misc set value = ? where key = "ky_date', (ky_date_str, ))
+                c.execute('update misc set value = ? where key = "ky_date"', (ky_date_str, ))
             c.commit()
             return reply("设置成功")
         except (IndexError, ValueError):
