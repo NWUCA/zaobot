@@ -415,3 +415,12 @@ def test_setky(client):
 
 def test_ky_2(client):
     assert "年度研究生考试还有" in send(client, 'ky')
+
+
+def test_ky_reminder(app, requests_mock):
+    from bot.scheduled_tasks import ky_reminder
+
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    ky_reminder(app)
+    assert '年度研究生考试还有' in r.message
