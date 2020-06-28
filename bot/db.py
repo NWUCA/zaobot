@@ -10,6 +10,10 @@ def init_database(app):
         print("Initialing database")
         with app.open_resource('schema.sql', 'r') as f:
             c.executescript(f.read())
+
+        # TODO: this will be removed in the future
+        with app.open_resource('migration_tmp.sql', 'r') as f:
+            c.executescript(f.read())
         c.commit()
 
 

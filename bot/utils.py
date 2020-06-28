@@ -1,61 +1,58 @@
-from .db import get_db
 from datetime import datetime, timedelta, date
-from flask import g
-import requests
 import base64
 import time
 import re
+import random
+import functools
+
+import requests
+from flask import current_app
+from tenacity import retry, stop_after_attempt
+
+from bot.db import get_db
+from bot.context import Context, GroupContext
 
 
 def reply(msg, at_sender=True):
-    now = datetime.now().timestamp()
     # 构造log所需的context
-    log({'message': msg, 'sender': {'nickname': 'zaobot'}, 'time': now, 'user_id': 0})
+    context = Context.build(msg)
+    log(context)
     return {'reply': msg, 'at_sender': at_sender}
 
 
-def log(context):
+def log(context: Context):
     c = get_db()
-    log_time = datetime.fromtimestamp(context['time'])
-    inserted_data = (context['message'], get_nickname(context),
-                     context['user_id'], context['time'], str(log_time))
+    log_time = datetime.fromtimestamp(context.time)
+    inserted_data = (context.message, context.name,
+                     context.user_id, context.time, str(log_time))
     c.execute("insert into log values (?,?,?,?,?)", inserted_data)
     c.commit()
 
 
-def get_nickname(context):
-    if context['sender'].get('card') is None:
-        return context['sender']['nickname']
-    else:
-        return context['sender']['card']
-
-
-class admin_required:
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, *args, **kwargs):
-        if args[0].get('group_id') == 102334415 \
-                and (args[0]['sender'].get('role') == 'owner' or args[0]['sender'].get('role') == 'admin'):
-            return self.func(*args, **kwargs)
+def admin_required(func):
+    """指令需要管理员权限的装饰器"""
+    @functools.wraps(func)
+    def check_permission(directive):
+        if directive.context.role in ('owner', 'admin'):
+            return func(directive)
         else:
             return reply("你没有权限o(≧口≦)o")
+    return check_permission
 
 
-class private_message_only:
+def private_message_only(func):
     """仅限私聊指令的装饰器"""
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, context, args):
-        if context['message_type'] != 'private':
-            if self.func.__doc__ is None:
-                rtn = f"使用 /{self.func.__name__} 指令。"
+    @functools.wraps(func)
+    def check_message_type(directive):
+        if directive.context.message_type != 'private':
+            if func.__doc__ is None:
+                rtn = f"使用 /{func.__name__} 指令。"
             else:
-                rtn = self.func.__doc__.strip()
+                rtn = func.__doc__.strip()
             return reply(f"请私聊我{rtn}")
         else:
-            return self.func(context, args)
+            return func(directive)
+    return check_message_type
 
 
 def average_rest_time(valid_record: list, delta: int) -> str:
@@ -95,22 +92,21 @@ class Error(Exception):
         self.ret_code = ret_code
 
 
-def send(context, message, **kwargs):
-    context = context.copy()
-    context['message'] = message
-    context.update(kwargs)
-    if 'message_type' not in context:
-        if 'group_id' in context:
-            context['message_type'] = 'group'
-        elif 'discuss_id' in context:
-            context['message_type'] = 'discuss'
-        elif 'user_id' in context:
-            context['message_type'] = 'private'
+def send(context: Context, message):
+    payload = {
+        'message_type': context.message_type,
+        'message': message
+    }
 
-    log({'message': message, 'sender': {'nickname': 'zaobot'}, 'time': context['time'], 'user_id': 0})
+    if context.message_type == 'group':
+        payload['group_id'] = context.group_id
+    elif context.message_type == 'private':
+        payload['user_id'] = context.user_id
+
+    log(Context.build(message, time_=context.time))
 
     url = 'http://127.0.0.1:5700/send_msg'
-    resp = requests.post(url, json=context)
+    resp = requests.post(url, json=payload)
     if resp.ok:
         data = resp.json()
         if data.get('status') == 'failed':
@@ -133,33 +129,35 @@ xiuxian_level = (('筑基', 100),
                  ('渡劫', 7800))
 
 
-def start_xiuxian(context):
+def start_xiuxian(context: Context):
     c = get_db()
-    if not 0 <= datetime.fromtimestamp(context['time']).time().hour < 5:
+    if not 0 <= datetime.fromtimestamp(context.time).time().hour < 5:
         return
-    if c.execute(f'select * from xiuxian_emulator where id = {context["user_id"]}').fetchone() is None:
+    if c.execute(f'select * from xiuxian_emulator where id = {context.user_id}').fetchone() is None:
         c.execute('insert into xiuxian_emulator values (?,?,?,?,?,?)',
-                  (context['user_id'], get_nickname(context), 0, 0, '', ''))
+                  (context.user_id, context.name, 0, 0, '', ''))
         c.commit()
-        send(context, f'@{get_nickname(context)}，你已经成功筑基，一个新的世界已经对你敞开！')
+        send(context, f'@{context.name}，你已经成功筑基，一个新的世界已经对你敞开！')
         accumulate_exp(context)
 
 
-def accumulate_exp(context):
+def accumulate_exp(context: Context):
     c = get_db()
-    now_datetime = datetime.fromtimestamp(context['time'])
+    now_datetime = datetime.fromtimestamp(context.time)
     now_time = now_datetime.time()
     if not 0 <= now_time.hour < 8:
         return
-    user = c.execute(f'select * from xiuxian_emulator where id = {context["user_id"]}').fetchone()
+    user = c.execute(f'select * from xiuxian_emulator where id = {context.user_id}').fetchone()
     if user is not None:
         if user['last_speaking_timestamp'] == "" \
-                or date.fromtimestamp(user['last_speaking_timestamp']) != date.fromtimestamp(context['time']):
+                or date.fromtimestamp(user['last_speaking_timestamp']) != date.fromtimestamp(context.time):
             last_speaking_datetime = now_datetime.replace(hour=0, minute=0, second=0)
         else:
             last_speaking_datetime = datetime.fromtimestamp(user['last_speaking_timestamp'])
 
         delta = now_datetime - last_speaking_datetime
+        if delta.total_seconds() < 60:  # This may reduce database updates
+            return
         if now_time.hour < 5 or (timedelta(minutes=1) <= delta < timedelta(hours=3)):
             elapsed_minute = int(delta.total_seconds() / 60)
         else:
@@ -167,86 +165,138 @@ def accumulate_exp(context):
         exp = user['exp'] + elapsed_minute
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            send(context, f'@{get_nickname(context)}，'
+            send(context, f'@{context.name}，'
                           f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
             level += 1
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',
                   (level, exp, now_datetime.timestamp(), now_datetime.isoformat(), user['id']))
-        if get_nickname(context) != user['nickname']:
-            c.execute('update xiuxian_emulator set nickname=? where id=?', (get_nickname(context), user['id']))
+        if context.name != user['nickname']:
+            c.execute('update xiuxian_emulator set nickname=? where id=?', (context.name, user['id']))
         c.commit()
 
 
+def update_baidu_ai_auth():
+    """
+    Baidu AI platform is used for ocr
+    Auth doc: https://ai.baidu.com/ai-doc/REFERENCE/Ck3dwjhhu
+    """
+    client_id = current_app.config['BAIDU_AI_AUTH_ID']
+    client_secret = current_app.config['BAIDU_AI_AUTH_SECRET']
+    host = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&" \
+           f"client_id={client_id}&client_secret={client_secret}"
+    resp = requests.get(host)
+    auth_token = {
+        'access_token': resp.json()['access_token'],
+        'created_time': time.time(),
+        "expires_in": resp.json()['expires_in']
+    }
+    current_app.config['baidu_ai_auth'] = auth_token
+    return auth_token
+
+
+def ocr(base64_image):
+    """
+    Baidu OCR service
+    DOC: https://ai.baidu.com/ai-doc/OCR/zk3h7xz52
+    """
+    baidu_ai_auth = current_app.config.get("baidu_ai_auth")
+    if (baidu_ai_auth is None) or \
+            (time.time() - baidu_ai_auth['created_time'] > baidu_ai_auth['expires_in'] - 86400):
+        baidu_ai_auth = update_baidu_ai_auth()
+    params = {"image": base64_image}
+    request_url = f"https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?" \
+                  f"access_token={baidu_ai_auth['access_token']}"
+    response = requests.post(request_url, data=params,
+                             headers={'content-type': 'application/x-www-form-urlencoded'})
+    if response.json().get('words_result') is not None:
+        return " ".join(map(lambda a: a['words'], response.json()["words_result"]))
+    else:
+        return ""
+
+
 def find_cai(context):
-    ocr_result = []
+    # 只针对环卫工有效
+    if context.user_id != 595811044:
+        return
 
     # Get image url
-    msg = context["message"]
+    msg = context.message
     images = re.findall(r"\[CQ:image,file=(.*?),url=(.*?)\]", msg)
 
-    if images:
-        # Download image
-        res_base64ed = []
-        for image in images:
-            if not image[0][-3:] == "gif":
-                res = requests.get(image[1])
-                res_base64ed.append(base64.b64encode(res.content))
+    ocr_result = []
+    for image in images:
+        image_name = image[0]
+        image_url = image[1]
+        if image_name.endswith('gif'):
+            continue
+        content = requests.get(image_url).content
+        ocr_result.append(ocr(base64.b64encode(content)))
 
-        # Get ocr access key
-        def get_bd_ocr_key():
-            host = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id" \
-                   "=z3B1bM2CjI3fi32zKj9toNIj&client_secret=RU5xGbR0uizZA2StvqWBGaGyEhDkF4b2"
-            res_ocr_key = requests.get(host)
-            if res_ocr_key:
-                res_ocr_key = res_ocr_key.json()
-                res_ocr_key["create_time"] = time.time()
-                return res_ocr_key
-
-        if "bdocrkey" not in g:
-            g.bdocrkey = get_bd_ocr_key()
-        if "create_time" in g.bdocrkey:
-            if not (time.time() - g.bdocrkey["create_time"]) >= (g.bdocrkey["expires_in"] - 6400):
-                g.bdocrkey = get_bd_ocr_key()
-        else:
-            g.bdocrkey = get_bd_ocr_key()
-
-        # request for the result
-        for img in res_base64ed:
-            params = {"image": img}
-            request_url = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic"
-            request_url = request_url + "?access_token=" + g.bdocrkey["access_token"]
-            response = requests.post(request_url, data=params,
-                                     headers={'content-type': 'application/x-www-form-urlencoded'})
-            if response:
-                # DOC:https://ai.baidu.com/ai-doc/OCR/zk3h7xz52
-                ocr_result_tmp = response.json()
-                try:
-                    ocr_result.append(ocr_result_tmp["words_result"])
-                except KeyError:
-                    raise KeyError("OCR error :" + str(ocr_result_tmp))
+    text = " ".join([context.message] + ocr_result)
 
     # re match
-    is_cai = False
-    cai = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
-    words_list = [context["message"]]
-    for result in ocr_result:
-        for text in result:
-            words_list.append(text["words"])
-    for word in words_list:
-        if cai.search(word):
-            is_cai = True
-
-    # Ban that guy and recall the message and say "你太强啦":
-    if context["group_id"] == 102334415 and is_cai:
-        post_data = {"group_id": 102334415, "user_id": context["user_id"], "duration": 60}
+    cai_re = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
+    if cai_re.search(text):
+        post_data = {"group_id": context.group_id, "user_id": context.user_id, "duration": 60 * 20}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
-        post_data = {"message_id": context["message_id"]}
-        requests.post("http://localhost:5700/delete_msg", json=post_data)
 
-        # process message
+        # delete message is only available in Coolq Pro
+        # post_data = {"message_id": context.message_id}
+        # requests.post("http://localhost:5700/delete_msg", json=post_data)
+
+        # substitute [CQ:...] to image url
         def sub(matched):
             # print(matched[1], matched[2])
-            return matched[2]
+            return matched[2] + ' '
+
         processed_msg = re.sub(r"\[CQ:image,file=(.*?),url=(.*?)\]", sub, msg)
-        send(context, f"违规内容：{get_nickname(context)} {datetime.fromtimestamp(context['time'])} {processed_msg}")
+        send(context, f"违规内容：{context.name} {datetime.fromtimestamp(context.time)} {processed_msg}")
+
+
+# Telegram bot API doc: https://core.telegram.org/bots/api
+@retry(reraise=True, stop=stop_after_attempt(3))
+def tg_send_msg(text):
+    requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
+                  f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMessage",
+                  json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "text": text}, timeout=5)
+
+
+@retry(reraise=True, stop=stop_after_attempt(3))
+def tg_send_media_group(text, photo_urls):
+    """
+    DOC: https://core.telegram.org/bots/api#sendmediagroup
+    文档上写 media 必须是2-10个元素的 array，实际一个元素也可
+    """
+    media = [{"type": "photo", "media": url} for url in photo_urls]
+    media[0]["caption"] = text  # 插入消息内容
+    requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
+                  f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMediaGroup",
+                  json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "media": media},
+                  timeout=5)
+
+
+def send_to_tg(context: GroupContext):
+    group_card = context.group_card
+    nickname = context.nickname
+    msg_prefix = f"[{group_card}({nickname})]:"
+    image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
+    image_urls = list(map(lambda a: a[1], re.findall(image_re, context.message)))
+    msg = re.sub(image_re, lambda a: " ", context.message)
+    if image_urls:
+        tg_send_media_group(f"{msg_prefix} {msg}", image_urls)
+    else:
+        tg_send_msg(f"{msg_prefix} {msg}")
+
+
+def randomly_save_message_to_treehole(context: Context):
+    c = get_db()
+    message = re.sub(r"\[CQ:(image|at).*?\]", '', context.message).strip()
+    if message == "":
+        return
+    if random.random() < current_app.config['RANDOMLY_SAVE_TO_TREEHOLE_RATE']:
+        timestamp = context.time
+        readable_time = datetime.fromtimestamp(timestamp)
+        c.execute("insert into treehole values (?,?,?,?,?,'random_pick')",
+                  (message, timestamp, readable_time, context.name, context.user_id))
+        c.commit()

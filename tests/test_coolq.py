@@ -1,9 +1,11 @@
-import pytest
 from datetime import datetime
 import sqlite3
-# from pprint import pprint
+from pprint import pprint
+import re
+
+import pytest
+
 from bot.db import get_db
-import requests_mock
 
 
 def data_generator(
@@ -18,11 +20,11 @@ def data_generator(
 ):
     if auto_prefix_slash:
         message = "/" + message
+    assert message_type in ('group', 'private')
     timestamp = datetime.fromisoformat(time).timestamp()
     data = {
         "anonymous": "None",
         "font": 1591808,
-        "group_id": 102334415,
         "message": message,
         "message_id": 1,
         "message_type": message_type,
@@ -44,6 +46,8 @@ def data_generator(
         "time": timestamp,
         "user_id": user_id
     }
+    if message_type == 'group':
+        data["group_id"] = 102334415
     return data
 
 
@@ -53,6 +57,11 @@ def send(client, *args, **kwargs):
         return response.json['reply']
     except TypeError:
         return
+
+
+def test_data_generator():
+    with pytest.raises(AssertionError):
+        data_generator('help', message_type='fake')
 
 
 def test_get_close_db(app):
@@ -74,8 +83,9 @@ def test_invalid_request(client):
 
 def test_help(client):
     response = client.post('/', json=data_generator('help'))
-    print(response.json)
+    pprint(response.json)
     assert 'github' in response.json['reply']
+    assert '/zao' in response.json['reply']
 
 
 def test_zao(client):
@@ -88,11 +98,11 @@ def test_zao_db(app):
         c = get_db()
         res = c.execute("select * from rest_record").fetchone()
         print(tuple(res))
-        assert 1
 
 
 def test_second_zao(client):
-    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00', user_id=101, card='no1'))
+    response = client.post('/', json=data_generator('zao', time='2019-12-01 08:01:00',
+                                                    user_id=101, card='no1'))
     assert '第2起床' in response.json['reply']
 
 
@@ -127,7 +137,6 @@ def test_admin(client):
 def test_zaoguys(client):
     response = client.post('/', json=data_generator('zaoguys', time='2019-12-01 22:00:00'))
     print(response.json)
-    assert 1
 
 
 def test_ask(client):
@@ -136,9 +145,17 @@ def test_ask(client):
     assert "说一个二元问题" in send(client, 'ask')
 
 
-def test_say(client):
+def test_say(client, app):
     assert "你必须说点什么" in send(client, 'say')
     assert "我记在脑子里啦" in send(client, 'say anything')
+    with app.app_context():
+        db = get_db()
+        res = db.execute('select * from treehole').fetchall()
+        assert len(res) != 0
+
+
+def test_dig(client):
+    assert "某个人说：" in send(client, 'dig')
 
 
 def test_private_only_decorator(client):
@@ -176,22 +193,23 @@ class MessageHandler:
         return request.json()
 
 
-# def test_xiuxian(client, requests_mock):
-#     r = MessageHandler()
-#     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
-#
-#     send(client, 'wan', time='2019-12-04 01:00:00')
-#     assert '成功筑基' in r.message
-#
-#     send(client, 'anything', time='2019-12-04 04:00:00')
-#     assert '突破了' in r.message
-#     print(r.message)
-#
-#
-# def test_xiuxian_ranking(client):
-#     response = send(client, 'xiuxian_ranking')
-#     print(response)
-#     assert 'test_card' in response
+def test_xiuxian(client, requests_mock):
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+
+    send(client, 'wan', time='2019-12-04 01:00:00')
+    assert '成功筑基' in r.message
+
+    send(client, 'anything', time='2019-12-04 04:00:00')
+    assert '突破了' in r.message
+    print(r.message)
+
+
+def test_xiuxian_ranking(client):
+    response = send(client, 'xiuxian_ranking')
+    print(response)
+    assert 'test_card' in response
+
 
 def test_abbreviation_query(client, requests_mock):
     class Callback:
@@ -252,51 +270,157 @@ def test_abbreviation_query(client, requests_mock):
     assert "上游似乎出锅了" in send(client, 'sxcx zsbd')
 
 
-def test_cai(client):
-    class Callback:
-        def __init__(self):
-            self.data = {}
+class SimpleCallback:
+    def __init__(self):
+        self.data = {}
 
-        def handler(self, request, context):
-            self.data = request.json()
-            return self.data
+    def handler(self, request, context):
+        self.data = request.json()
+        return self.data
 
-    callback = Callback()
 
-    with requests_mock.Mocker(real_http=True) as m:
-        m.post("/delete_msg", json=callback.handler)
-        m.post("/set_group_ban")
+def test_cai(client, requests_mock):
+    callback = SimpleCallback()
+    matcher = re.compile('baidu|loli.net')
 
-        def send_msg_callback(request, context):
-            # print(request.json())
-            assert "违规内容" in request.json()['message']
-            return {"data": "success"}
-        m.post("/send_msg", json=send_msg_callback)
+    requests_mock.register_uri('GET', matcher, real_http=True)
+    requests_mock.register_uri('POST', matcher, real_http=True)
 
-        send(client, "我好菜啊", user_id=1195944745, auto_prefix_slash=False)
-        assert callback.data != {}
+    requests_mock.post("/set_group_ban", json=callback.handler)
 
-        callback.data = {}
-        send(client, "我觉得还行", auto_prefix_slash=False)
-        assert callback.data == {}
+    # m.post("/delete_msg", json=callback.handler)
 
-        send(client,
-             "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-             "url=https://www.baidu.com/img/bd_logo1.png",
-             user_id=1195944745,
-             auto_prefix_slash=False)
-        assert callback.data == {}
+    def send_msg_callback(request, context):
+        # print(request.json())
+        assert "违规内容" in request.json()['message']
+        return {"data": "success"}
 
-        callback.data = {}
-        send(client,
-             "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-             "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-             auto_prefix_slash=False)
-        assert callback.data != {}
+    requests_mock.post("/send_msg", json=send_msg_callback)
 
-        callback.data = {}
-        send(client,
-             "哈哈哈哈 [CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
-             "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
-             auto_prefix_slash=False)
-        assert callback.data != {}
+    send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False)
+    assert callback.data != {}
+
+    callback.data = {}
+    send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False, message_type='private')
+    assert callback.data == {}
+
+    send(client, "我觉得还行", auto_prefix_slash=False)
+    assert callback.data == {}
+
+    send(client,
+         "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://www.baidu.com/img/bd_logo1.png]",
+         user_id=595811044,
+         auto_prefix_slash=False)
+    assert callback.data == {}
+
+    callback.data = {}
+    send(client,
+         "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+         user_id=595811044,
+         auto_prefix_slash=False)
+    assert callback.data != {}
+
+    callback.data = {}
+    send(client,
+         "哈哈哈哈 [CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
+         user_id=595811044,
+         auto_prefix_slash=False)
+    assert callback.data != {}
+
+
+def test_send_to_tg(client, requests_mock, config):
+    callback = SimpleCallback()
+    requests_mock.post(f"{config['TELEGRAM_API_ADDRESS']}/"
+                       f"{config['TELEGRAM_API_TOKEN']}/sendMessage", json=callback.handler)
+    requests_mock.post(f"{config['TELEGRAM_API_ADDRESS']}/"
+                       f"{config['TELEGRAM_API_TOKEN']}/sendMediaGroup", json=callback.handler)
+
+    send(client, "我觉得还行", auto_prefix_slash=False)
+    print(callback.data)
+    assert callback.data['text'] == '[test_card(test_nickname)]: 我觉得还行'
+
+    send(client,
+         "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
+         "url=https://www.baidu.com/img/bd_logo1.png]",
+         user_id=1195944745,
+         auto_prefix_slash=False)
+    assert callback.data['media'] == \
+           [{'type': 'photo', 'media': 'https://www.baidu.com/img/bd_logo1.png',
+             'caption': '[test_card(test_nickname)]:  '}]
+    print(callback.data)
+
+
+def test_randomly_save_message_to_treehole(app):
+    # we don't use HTTP client because it's too slow
+    from bot.utils import randomly_save_message_to_treehole
+    from bot.context import GroupContext
+    data = data_generator('foobar', auto_prefix_slash=False)
+    context = GroupContext(data)
+
+    with app.app_context():
+        for _ in range(1000):
+            randomly_save_message_to_treehole(context)
+
+        db = get_db()
+        res = db.execute('select * from treehole').fetchall()
+        print("Len =", len(res))
+        assert len(res) != 0
+
+
+def test_webhook(client, requests_mock):
+    data = {
+        'commits': [
+            {'id': '1234567', 'message': "test1"},
+            {'id': '2345678', 'message': "test2"},
+        ],
+        'sender': {
+            'login': 'user1'
+        }
+    }
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'push'})
+    print(r.message)
+    assert 'user1 has pushed 2 commit(s)' in r.message
+
+    data = {
+        "action": "opened",
+        "pull_request": {
+            "html_url": "fake_url",
+            "title": "foo",
+        },
+        'sender': {
+            'login': 'user1'
+        }
+    }
+    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'pull_request'})
+    print(r.message)
+    assert 'user1 has opened a pull request: foo.\nFor details see: fake_url' in r.message
+
+
+def test_ky_1(client):
+    assert "异常，请联系管理员重置考研时间" in send(client, 'ky')
+
+
+def test_setky(client):
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky', role='admin')
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky 1231', role='admin')
+    assert "设置成功" in send(client, 'setky 20201122', role='admin')
+    # for updates
+    assert "设置成功" in send(client, 'setky 20201222', role='admin')
+
+
+def test_ky_2(client):
+    assert "年度研究生考试还有" in send(client, 'ky')
+
+
+def test_ky_reminder(app, requests_mock):
+    from bot.scheduled_tasks import ky_reminder
+
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    ky_reminder(app)
+    assert '年度研究生考试还有' in r.message

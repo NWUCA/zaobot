@@ -3,3 +3,5 @@ pytest
 requests
 requests_mock
 flake8
+tenacity
+APScheduler
