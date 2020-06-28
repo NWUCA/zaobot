@@ -171,10 +171,10 @@ def accumulate_exp(context: Context):
             return
         accident_exp = 0
         if random.randint(1, 100) == 50:
-            accident_exp = 100;
+            accident_exp = 100
             send(context, f'@{context.name}，'
                           f'路遇百年大药， 增加100修为')
-        exp = user['exp'] + elapsed_minute + accident_exp;
+        exp = user['exp'] + elapsed_minute + accident_exp
         level = user['level']
         while exp > xiuxian_level[level][1]:
             if check_xiuxian_upgrade() :
