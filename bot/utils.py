@@ -126,7 +126,14 @@ xiuxian_level = (('筑基', 100),
                  ('合体', 4500),
                  ('洞虚', 5500),
                  ('大乘', 6600),
-                 ('渡劫', 7800))
+                 ('渡劫', 7800),
+                 ('大乘境', 10000),
+                 ('阴阳境', 15000),
+                 ('生死境', 22000),
+                 ('真仙', 30000),
+                 ('半神', 50000),
+                 ('真神', 100000)
+                 )
 
 
 def start_xiuxian(context: Context):
@@ -162,18 +169,45 @@ def accumulate_exp(context: Context):
             elapsed_minute = int(delta.total_seconds() / 60)
         else:
             return
-        exp = user['exp'] + elapsed_minute
+        accident_exp = 0
+        if random.randint(1, 100) == 50:
+            accident_exp = 100;
+            send(context, f'@{context.name}，'
+                          f'路遇百年大药， 增加100修为')
+        exp = user['exp'] + elapsed_minute + accident_exp;
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            send(context, f'@{context.name}，'
+            if check_xiuxian_upgrade() :
+                send(context, f'@{context.name}，'
                           f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
-            level += 1
+                level += 1
+            else:
+                exp = int(exp * 0.75)
+                oldlevel = level
+                level = get_new_level(exp)
+                send(context, f'@{context.name}，'
+                          f'{xiuxian_level[oldlevel][0]}期渡劫失败！ 跌入{xiuxian_level[level][0]}。')
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',
                   (level, exp, now_datetime.timestamp(), now_datetime.isoformat(), user['id']))
         if context.name != user['nickname']:
             c.execute('update xiuxian_emulator set nickname=? where id=?', (context.name, user['id']))
         c.commit()
+
+
+prime_num = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+
+
+def check_xiuxian_upgrade():
+    r = random.randint(1, 100)
+    return r in prime_num
+
+
+def get_new_level(exp):
+    level = 0
+    while exp > xiuxian_level[level][1]:
+        level += 1
+    return level - 1
 
 
 def update_baidu_ai_auth():
