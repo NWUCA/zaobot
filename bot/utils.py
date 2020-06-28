@@ -31,17 +31,20 @@ def log(context: Context):
 
 def admin_required(func):
     """指令需要管理员权限的装饰器"""
+
     @functools.wraps(func)
     def check_permission(directive):
         if directive.context.role in ('owner', 'admin'):
             return func(directive)
         else:
             return reply("你没有权限o(≧口≦)o")
+
     return check_permission
 
 
 def private_message_only(func):
     """仅限私聊指令的装饰器"""
+
     @functools.wraps(func)
     def check_message_type(directive):
         if directive.context.message_type != 'private':
@@ -52,6 +55,7 @@ def private_message_only(func):
             return reply(f"请私聊我{rtn}")
         else:
             return func(directive)
+
     return check_message_type
 
 
@@ -177,16 +181,16 @@ def accumulate_exp(context: Context):
         exp = user['exp'] + elapsed_minute + accident_exp
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            if check_xiuxian_upgrade() :
+            if check_xiuxian_upgrade():
                 send(context, f'@{context.name}，'
-                          f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
+                              f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
                 level += 1
             else:
                 exp = int(exp * 0.75)
-                oldlevel = level
+                old_level = level
                 level = get_new_level(exp)
                 send(context, f'@{context.name}，'
-                          f'{xiuxian_level[oldlevel][0]}期渡劫失败！ 跌入{xiuxian_level[level][0]}。')
+                              f'{xiuxian_level[old_level][0]}期渡劫失败！ 跌入{xiuxian_level[level][0]}。')
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',
                   (level, exp, now_datetime.timestamp(), now_datetime.isoformat(), user['id']))
@@ -195,7 +199,7 @@ def accumulate_exp(context: Context):
         c.commit()
 
 
-prime_num = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+prime_num = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
 
 
 def check_xiuxian_upgrade():
