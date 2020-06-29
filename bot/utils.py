@@ -137,7 +137,7 @@ def start_xiuxian(context: Context):
         c.execute('insert into xiuxian_emulator values (?,?,?,?,?,?)',
                   (context.user_id, context.name, 0, 0, '', ''))
         c.commit()
-        send(context, f'@{context.name}，你已经成功筑基，一个新的世界已经对你敞开！')
+        send(context, f'[CQ:at,qq={context.user_id}]，你已经成功筑基，一个新的世界已经对你敞开！')
         accumulate_exp(context)
 
 
@@ -165,7 +165,7 @@ def accumulate_exp(context: Context):
         exp = user['exp'] + elapsed_minute
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            send(context, f'@{context.name}，'
+            send(context, f'[CQ:at,qq={context.user_id}]，'
                           f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
             level += 1
         c.execute('update xiuxian_emulator '
@@ -236,7 +236,7 @@ def find_cai(context):
     text = " ".join([context.message] + ocr_result)
 
     # re match
-    cai_re = re.compile(r"[你|我|群]\s*?(.*){1}\s*?菜")
+    cai_re = re.compile(r"[你我群]\s*?.{,2}\s*?菜")
     if cai_re.search(text):
         post_data = {"group_id": context.group_id, "user_id": context.user_id, "duration": 60 * 20}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
