@@ -235,11 +235,11 @@ class Directive:
             date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
             if len(ky_date_str) != 8:
                 raise ValueError
-            data = c.execute('select * from misc where key = "ky_date"').fetchone()
+            data = c.execute("select * from misc where key = 'ky_date'").fetchone()
             if data is None:
-                c.execute('insert into misc values ("ky_date", ?)', (ky_date_str, ))
+                c.execute("insert into misc values ('ky_date', ?)", (ky_date_str, ))
             else:
-                c.execute('update misc set value = ? where key = "ky_date"', (ky_date_str, ))
+                c.execute("update misc set value = ? where key = 'ky_date'", (ky_date_str, ))
             c.commit()
             return reply("设置成功")
         except (IndexError, ValueError):
@@ -247,17 +247,10 @@ class Directive:
 
     def ky(self):
         c = get_db()
-        data = c.execute('select * from misc where key = "ky_date"').fetchone()
+        data = c.execute("select * from misc where key = 'ky_date'").fetchone()
         if data is None:
             return reply("异常，请联系管理员重置考研时间", at_sender=False)
         ky_date_str = data['value']
         ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
         days_to_ky = (ky_date - date.today()).days
         return reply(f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
-
-    def test_session(self):
-        if session.get('test'):
-            return reply(session['test'])
-        else:
-            session['test'] = 'Hello, World!'
-            return reply("Setting session...")

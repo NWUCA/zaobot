@@ -16,6 +16,8 @@ class Context:
         self.nickname = payload['sender'].get('nickname')
         self.message_type = None
         self.group_id = None
+        self.group_card = None
+        self.role = None
 
     @classmethod
     def build(cls, message, time_: Rational = None, user_id=None, nickname=None, group_id=None):

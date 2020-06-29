@@ -132,6 +132,7 @@ def test_wan_invalid(client):
 def test_admin(client):
     response = client.post('/', json=data_generator('flush'))
     assert '你没有权限' in response.json['reply']
+    assert '你没有权限' in send(client, 'flush', message_type='private')
 
 
 def test_zaoguys(client):
