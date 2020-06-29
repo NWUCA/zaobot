@@ -5,7 +5,6 @@ import random
 from datetime import date, datetime, timedelta
 
 import requests
-from flask import session
 
 from bot.db import get_db
 from bot.utils import reply, average_rest_time
