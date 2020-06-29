@@ -22,4 +22,4 @@ def ky_reminder(app):
         ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
         days_to_ky = (ky_date - date.today()).days
         send(GroupContext.build(group_id=app.config["KY_NOTIFY_GROUP"]),
-             message=f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
+             message=f"[CQ:at,qq=all] 距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
