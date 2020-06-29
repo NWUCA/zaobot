@@ -98,7 +98,6 @@ def test_zao_db(app):
         c = get_db()
         res = c.execute("select * from rest_record").fetchone()
         print(tuple(res))
-        assert 1
 
 
 def test_second_zao(client):
@@ -146,9 +145,17 @@ def test_ask(client):
     assert "说一个二元问题" in send(client, 'ask')
 
 
-def test_say(client):
+def test_say(client, app):
     assert "你必须说点什么" in send(client, 'say')
     assert "我记在脑子里啦" in send(client, 'say anything')
+    with app.app_context():
+        db = get_db()
+        res = db.execute('select * from treehole').fetchall()
+        assert len(res) != 0
+
+
+def test_dig(client):
+    assert "某个人说：" in send(client, 'dig')
 
 
 def test_private_only_decorator(client):
@@ -380,20 +387,9 @@ def test_webhook(client, requests_mock):
     assert 'user1 has pushed 2 commit(s)' in r.message
 
     data = {
-        'action': 'completed',
-        'check_run': {
-            'name': 'test',
-            'conclusion': 'success'
-        }
-    }
-    client.post('/webhook', json=data, headers={'X-GitHub-Event': 'check_run'})
-    print(r.message)
-    assert 'CI job test has completed: success' in r.message
-
-    data = {
         "action": "opened",
         "pull_request": {
-            "url": "fake_url",
+            "html_url": "fake_url",
             "title": "foo",
         },
         'sender': {
@@ -402,7 +398,7 @@ def test_webhook(client, requests_mock):
     }
     client.post('/webhook', json=data, headers={'X-GitHub-Event': 'pull_request'})
     print(r.message)
-    assert 'user1 has opened a pull request foo. For details see: fake_url' in r.message
+    assert 'user1 has opened a pull request: foo.\nFor details see: fake_url' in r.message
 
 
 def test_ky_1(client):
@@ -410,10 +406,21 @@ def test_ky_1(client):
 
 
 def test_setky(client):
-    assert "你没有权限" in send(client, 'setky')
-    assert "你没有权限" in send(client, 'setky 1231')
-    assert "你没有权限" in send(client, 'setky 20201122')
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky', role='admin')
+    assert "考研时间格式必须为yyyyMMdd" in send(client, 'setky 1231', role='admin')
+    assert "设置成功" in send(client, 'setky 20201122', role='admin')
+    # for updates
+    assert "设置成功" in send(client, 'setky 20201222', role='admin')
 
 
 def test_ky_2(client):
-    assert "异常，请联系管理员重置考研时间" in send(client, 'ky')
+    assert "年度研究生考试还有" in send(client, 'ky')
+
+
+def test_ky_reminder(app, requests_mock):
+    from bot.scheduled_tasks import ky_reminder
+
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    ky_reminder(app)
+    assert '年度研究生考试还有' in r.message

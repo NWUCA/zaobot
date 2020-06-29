@@ -84,4 +84,4 @@ The bot is built on Coolq and Coolq HTTP API.
 |flake8| code style check tools|
 
 ## How to contribute
-Feel free to make an issue or a pull request.
+Feel free to open an issue or a pull request.

@@ -4,8 +4,7 @@ from bot import db
 from bot import utils
 from bot.directive import Directive
 from bot.context import Context, PrivateContext, GroupContext
-from apscheduler.schedulers.background import BackgroundScheduler
-from .utils import send
+from bot.scheduled_tasks import init_background_tasks
 
 
 def create_app(config=None):
@@ -30,28 +29,9 @@ def create_app(config=None):
 
     app.teardown_appcontext(db.close_db)
 
-    init_background_tasks(app.config)
+    init_background_tasks(app)
 
     return app
-
-
-def init_background_tasks(config):
-    apsched = BackgroundScheduler()
-    apsched.add_job(init_ky_reminder, args=[config], trigger='cron', hour=7, minute=0)
-    apsched.start()
-
-
-def init_ky_reminder(config):
-    from datetime import date
-    try:
-        ky_date_str = os.environ["KY_DATE"]
-        ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
-        days_to_ky = (ky_date - date.today()).days
-        send(GroupContext.build(group_id=config["KY_NOTIFY_GROUP"]),
-             message=f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
-    except KeyError:
-        send(GroupContext.build(group_id=config["KY_NOTIFY_GROUP"]),
-             message="管理员还未设定考研时间，使用 /setky 设定考研时间")
 
 
 def handler():
@@ -105,13 +85,7 @@ def webhook_handler():
 
     # DOC: https://developer.github.com/webhooks/event-payloads/
     payload = request.json
-    if request.headers.get("X-GitHub-Event") == 'check_run':
-        if payload['action'] != "completed":
-            return ""
-        check_run = payload['check_run']
-        message = f"CI job {check_run['name']} has completed: {check_run['conclusion']}."
-        utils.send(context, message)
-    elif request.headers.get("X-GitHub-Event") == 'push':
+    if request.headers.get("X-GitHub-Event") == 'push':
         commits = payload['commits']
         message = f"{payload['sender']['login']} has pushed {len(commits)} commit(s)" \
                   f" to my repository:"
@@ -119,8 +93,8 @@ def webhook_handler():
             message += f"\n{commit['id'][:6]} {commit['message']}"
         utils.send(context, message)
     elif request.headers.get("X-GitHub-Event") == 'pull_request':
-        message = f"{payload['sender']['login']} has {payload['action']} a pull request " \
-                  f"{payload['pull_request']['title']}. " \
-                  f"For details see: {payload['pull_request']['url']}"
+        message = f"{payload['sender']['login']} has {payload['action']} a pull request: " \
+                  f"{payload['pull_request']['title']}.\n" \
+                  f"For details see: {payload['pull_request']['html_url']}"
         utils.send(context, message)
     return ""

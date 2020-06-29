@@ -2,10 +2,10 @@
 zaobot的所有指令
 """
 import random
-import os
 from datetime import date, datetime, timedelta
 
 import requests
+from flask import session
 
 from bot.db import get_db
 from bot.utils import reply, average_rest_time
@@ -133,7 +133,7 @@ class Directive:
         secret = " ".join(self.context.args)
         timestamp = self.context.time
         time = datetime.fromtimestamp(timestamp)
-        c.execute("insert into treehole values (?,?,?,?,?)",
+        c.execute("insert into treehole values (?,?,?,?,?,'say')",
                   (secret, timestamp, time, self.context.name, self.context.user_id))
         c.commit()
         return reply("我记在脑子里啦！")
@@ -153,12 +153,12 @@ class Directive:
         return reply(msg)
 
     def dig(self):
-        """Under construction"""
-        # total_length = r.llen('secrets')
-        # rand = random.randrange(total_length)
-        # secret = r.lrange('secrets', rand, rand)[0]
-        # return reply("某个人说：" + secret, False)
-        return reply("")
+        """随机从树洞取一条消息"""
+        c = get_db()
+        length = c.execute('select count(*) from treehole').fetchone()[0]
+        rand = random.randrange(length)
+        secret = c.execute(f'select message from treehole limit 1 offset {rand}').fetchone()['message']
+        return reply("某个人说：" + secret, at_sender=False)
 
     @admin_required
     def flush(self):
@@ -229,26 +229,35 @@ class Directive:
 
     @admin_required
     def setky(self):
+        c = get_db()
         try:
-            kydate = self.context.args[0]
-            if len(kydate) != 8:
+            ky_date_str = self.context.args[0]
+            date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
+            if len(ky_date_str) != 8:
                 raise ValueError
-            import subprocess
-            rtc = subprocess.call(["echo", f"'export KY_DATE={kydate}'", ">>", "/etc/profile"], shell=True)
-            if rtc == 0:
-                rtc = subprocess.call(["source", "/etc/profile"], shell=True)
-            if rtc == 0:
-                return reply("设置成功")
+            data = c.execute('select * from misc where key = "ky_date"').fetchone()
+            if data is None:
+                c.execute('insert into misc values ("ky_date", ?)', (ky_date_str, ))
             else:
-                return reply("设置失败")
+                c.execute('update misc set value = ? where key = "ky_date"', (ky_date_str, ))
+            c.commit()
+            return reply("设置成功")
         except (IndexError, ValueError):
             return reply("考研时间格式必须为yyyyMMdd")
 
     def ky(self):
-        try:
-            ky_date_str = os.environ["KY_DATE"]
-            ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
-            days_to_ky = (ky_date - date.today()).days
-            return reply(f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
-        except KeyError:
-            return reply(os.environ.get("KY_DATE", "异常，请联系管理员重置考研时间"), at_sender=False)
+        c = get_db()
+        data = c.execute('select * from misc where key = "ky_date"').fetchone()
+        if data is None:
+            return reply("异常，请联系管理员重置考研时间", at_sender=False)
+        ky_date_str = data['value']
+        ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
+        days_to_ky = (ky_date - date.today()).days
+        return reply(f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
+
+    def test_session(self):
+        if session.get('test'):
+            return reply(session['test'])
+        else:
+            session['test'] = 'Hello, World!'
+            return reply("Setting session...")
