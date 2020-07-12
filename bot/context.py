@@ -3,6 +3,8 @@ from numbers import Rational
 
 
 class Context:
+    message_type: str
+
     def __init__(self, payload):
         self.message = payload['message'].strip()
         self.message_id = payload.get('message_id')
@@ -14,7 +16,6 @@ class Context:
         self.user_id = payload['user_id']
         self.time = payload['time']
         self.nickname = payload['sender'].get('nickname')
-        self.message_type = None
         self.group_id = None
         self.group_card = None
         self.role = None
@@ -41,15 +42,17 @@ class Context:
 
 
 class PrivateContext(Context):
+    message_type = "private"
+
     def __init__(self, payload):
         super().__init__(payload)
-        self.message_type = "private"
 
 
 class GroupContext(Context):
+    message_type = "group"
+
     def __init__(self, payload):
         super().__init__(payload)
-        self.message_type = "group"
         self.group_id = payload['group_id']
         self.group_card = payload['sender'].get('card')  # could be empty string
         self.role = payload['sender'].get('role')

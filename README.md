@@ -5,6 +5,13 @@ Thanks to the original [zaobot](https://github.com/huiyiqun/zaobot).
 Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) 
 and its [Python SDK](https://github.com/cqmoe/python-cqhttp).
 
+## Prerequisites
+Zaobot is a flask app, so you should first learn 
+   [how flask works](https://flask.palletsprojects.com/en/1.1.x/).
+   
+We use pytest as the test framework. You may want to read their 
+   [doc](https://docs.pytest.org/en/stable/).
+
 ## Get started
 See the reference project above.
 The entrance file is *bot/server.py*.
@@ -82,6 +89,11 @@ The bot is built on Coolq and Coolq HTTP API.
 |pytest| test framework|
 |requests_mock| intercept HTTP requests|
 |flake8| code style check tools|
+
+## Deploy
+```bash
+gunicorn -b [domain:port] "bot.server:create_app()"
+```
 
 ## How to contribute
 Feel free to open an issue or a pull request.
