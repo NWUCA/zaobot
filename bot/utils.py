@@ -300,3 +300,10 @@ def randomly_save_message_to_treehole(context: Context):
         c.execute("insert into treehole values (?,?,?,?,?,'random_pick')",
                   (message, timestamp, readable_time, context.name, context.user_id))
         c.commit()
+
+
+def detect_blue(context):
+    """
+    return True for blue message, False otherwise
+    """
+    return len(list(filter(lambda x: x in context.message, current_app.config['BLUE_WORDS']))) > 0

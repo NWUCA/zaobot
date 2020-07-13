@@ -5,6 +5,7 @@ from bot import utils
 from bot.directive import Directive
 from bot.context import Context, PrivateContext, GroupContext
 from bot.scheduled_tasks import init_background_tasks
+from datetime import date
 
 
 def create_app(config=None):
@@ -78,6 +79,18 @@ def pre_process(context: Context):
         utils.find_cai(context)
         if context.group_id == current_app.config['FORWARDED_QQ_GROUP_ID']:
             utils.send_to_tg(context)
+        if context.group_id == current_app.config['GHS_NOTIFY_GROUP']:
+            if utils.detect_blue(context):
+                utils.send(context, "gkd gkd ~")
+                c = utils.get_db()
+                data = c.execute("select * from misc where key = 'last_ghs_date'").fetchone()
+                if data is None:
+                    c.execute("insert into misc values ('last_ghs_date', ?)", (date.today().isoformat(),))
+                elif data['last_ghs_date'] == date.today().isoformat():
+                    return
+                else:
+                    c.execute("update misc set value = ? where key = 'last_ghs_date'", (date.today().isoformat(),))
+                c.commit()
 
 
 def webhook_handler():
