@@ -89,7 +89,7 @@ def pre_process(context: Context):
                 today = date.fromtimestamp(context.time).isoformat()
                 if data is None:
                     c.execute("insert into misc values ('last_ghs_date', ?)", (today,))
-                elif data['last_ghs_date'] == date.today().isoformat():
+                elif data['value'] == date.today().isoformat():
                     return
                 else:
                     c.execute("update misc set value = ? where key = 'last_ghs_date'", (today,))
