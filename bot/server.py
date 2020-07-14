@@ -77,19 +77,22 @@ def pre_process(context: Context):
 
     if context.message_type == 'group':
         utils.find_cai(context)
+
         if context.group_id == current_app.config['FORWARDED_QQ_GROUP_ID']:
             utils.send_to_tg(context)
+
         if context.group_id == current_app.config['GHS_NOTIFY_GROUP']:
             if utils.detect_blue(context):
                 utils.send(context, "gkd gkd ~")
                 c = utils.get_db()
                 data = c.execute("select * from misc where key = 'last_ghs_date'").fetchone()
+                today = date.fromtimestamp(context.time).isoformat()
                 if data is None:
-                    c.execute("insert into misc values ('last_ghs_date', ?)", (date.today().isoformat(),))
+                    c.execute("insert into misc values ('last_ghs_date', ?)", (today,))
                 elif data['last_ghs_date'] == date.today().isoformat():
                     return
                 else:
-                    c.execute("update misc set value = ? where key = 'last_ghs_date'", (date.today().isoformat(),))
+                    c.execute("update misc set value = ? where key = 'last_ghs_date'", (today,))
                 c.commit()
 
 

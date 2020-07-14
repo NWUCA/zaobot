@@ -425,3 +425,20 @@ def test_ky_reminder(app, requests_mock):
     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
     ky_reminder(app)
     assert '年度研究生考试还有' in r.message
+
+
+def test_ghs(client, requests_mock):
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    send(client, '开车了', auto_prefix_slash=False)
+    assert 'gkd' in r.message
+
+
+def test_ghs_reminder(app, requests_mock):
+    # 依赖上一个测试
+    from bot.scheduled_tasks import ghs_reminder
+
+    r = MessageHandler()
+    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
+    ghs_reminder(app)
+    assert '距离上次 ghs 已经过去' in r.message
