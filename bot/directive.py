@@ -228,6 +228,9 @@ class Directive:
 
     @admin_required
     def setky(self):
+        """
+        设置考研日期
+        """
         c = get_db()
         try:
             ky_date_str = self.context.args[0]
@@ -245,6 +248,9 @@ class Directive:
             return reply("考研时间格式必须为yyyyMMdd")
 
     def ky(self):
+        """
+        查询距离考研的天数
+        """
         c = get_db()
         data = c.execute("select * from misc where key = 'ky_date'").fetchone()
         if data is None:
