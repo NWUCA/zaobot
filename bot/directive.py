@@ -217,8 +217,11 @@ class Directive:
         return reply(rtn, at_sender=False)
 
     def chp(self):
-        """彩虹屁"""
-        r = requests.get('https://chp.shadiao.app/api.php')
+        """网抑云彩虹屁"""
+        if random.randrange(2) == 1:
+            r = requests.get('https://nd.2890.ltd/api/?format=text')  # 网抑云
+        else:
+            r = requests.get('https://chp.shadiao.app/api.php')  # 彩虹屁
         return reply(r.text, at_sender=False)
 
     def nmsl(self):
