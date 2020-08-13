@@ -126,7 +126,8 @@ xiuxian_level = (('筑基', 100),
                  ('合体', 4500),
                  ('洞虚', 5500),
                  ('大乘', 6600),
-                 ('渡劫', 7800))
+                 ('渡劫', 7800),
+                 ('真仙', 2**100))
 
 
 def start_xiuxian(context: Context):
@@ -165,8 +166,12 @@ def accumulate_exp(context: Context):
         exp = user['exp'] + elapsed_minute
         level = user['level']
         while exp > xiuxian_level[level][1]:
-            send(context, f'[CQ:at,qq={context.user_id}]，'
-                          f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
+            if xiuxian_level[level][0] == '渡劫':
+                send(context, '温馨提示: 渡劫需遵守渡劫基本法, 文明渡劫, 从我做起.')
+                send(context, f'恭喜[CQ:at,qq={context.user_id}]道友渡劫成功, 飞升成仙!')
+            else:
+                send(context, f'[CQ:at,qq={context.user_id}]，'
+                              f'你已经成功突破了{xiuxian_level[level][0]}期，进入{xiuxian_level[level + 1][0]}期。')
             level += 1
         c.execute('update xiuxian_emulator '
                   'set level=?, exp=?, last_speaking_timestamp=?, last_speaking_time=? where id=?',
