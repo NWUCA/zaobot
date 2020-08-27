@@ -5,6 +5,9 @@ Thanks to the original [zaobot](https://github.com/huiyiqun/zaobot).
 Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) 
 and its [Python SDK](https://github.com/cqmoe/python-cqhttp).
 
+The original bot framework is Coolq. However, Coolq has shutdown their service, 
+for now the bot framework has been migrated to [go-cqhttp](https://github.com/Mrs4s/go-cqhttp).
+
 ## Prerequisites
 Zaobot is a flask app, so you should first learn 
    [how flask works](https://flask.palletsprojects.com/en/1.1.x/).

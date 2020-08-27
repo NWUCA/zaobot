@@ -137,20 +137,6 @@ class Directive:
         c.commit()
         return reply("我记在脑子里啦！")
 
-    def backdoor(self):
-        c = get_db()
-        msg = ""
-        try:
-            timestamp = self.context.message.replace("/backdoor ", "")
-            res = c.execute(f"select * from treehole where timestamp = {timestamp}").fetchall()
-            for i in res:
-                msg += str(tuple(i)) + '\n'
-        except IndexError:
-            pass
-        except Exception as e:
-            msg = str(e)
-        return reply(msg)
-
     def dig(self):
         """随机从树洞取一条消息"""
         c = get_db()
