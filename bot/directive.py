@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import requests
 
 from bot.db import get_db
-from bot.utils import reply, average_rest_time
+from bot.utils import reply, average_rest_time, send
 from bot.utils import xiuxian_level, start_xiuxian
 from bot.utils import admin_required, private_message_only
 from bot.context import Context
@@ -115,10 +115,28 @@ class Directive:
             _ = self.context.args[0]
         except IndexError:
             return reply("说一个二元问题(´・ω・`)")
-        if random.randrange(2) == 1:
-            return reply("Yes")
-        else:
-            return reply("No")
+        ans = requests.get('https://yesno.wtf/api/').json()
+        resp = [
+            {
+                "type": "reply",
+                "data": {
+                    "id": self.context.message_id
+                }
+            },
+            {
+                "type": "text",
+                "data": {
+                    "text": ans['answer']
+                }
+            },
+            {
+                "type": "image",
+                "data": {
+                    "file": ans['image']
+                }
+            }
+        ]
+        send(self.context, resp)
 
     def say(self):
         """向树洞里说一句话"""

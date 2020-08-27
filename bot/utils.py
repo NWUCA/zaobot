@@ -4,6 +4,7 @@ import time
 import re
 import random
 import functools
+from typing import List, Dict, Union
 
 import requests
 from flask import current_app
@@ -92,7 +93,7 @@ class Error(Exception):
         self.ret_code = ret_code
 
 
-def send(context: Context, message):
+def send(context: Context, message: Union[List[Dict], str]):
     payload = {
         'message_type': context.message_type,
         'message': message
@@ -103,7 +104,9 @@ def send(context: Context, message):
     elif context.message_type == 'private':
         payload['user_id'] = context.user_id
 
-    log(Context.build(message, time_=context.time))
+    # FIXME: deal with array
+    if isinstance(message, str):
+        log(Context.build(message, time_=context.time))
 
     url = 'http://127.0.0.1:5700/send_msg'
     resp = requests.post(url, json=payload)
@@ -246,9 +249,8 @@ def find_cai(context):
         post_data = {"group_id": context.group_id, "user_id": context.user_id, "duration": 60 * 20}
         requests.post("http://localhost:5700/set_group_ban", json=post_data)
 
-        # delete message is only available in Coolq Pro
-        # post_data = {"message_id": context.message_id}
-        # requests.post("http://localhost:5700/delete_msg", json=post_data)
+        post_data = {"message_id": context.message_id}
+        requests.post("http://localhost:5700/delete_msg", json=post_data)
 
         # substitute [CQ:...] to image url
         def sub(matched):

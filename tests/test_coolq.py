@@ -140,12 +140,6 @@ def test_zaoguys(client):
     print(response.json)
 
 
-def test_ask(client):
-    r = send(client, 'ask anything')
-    assert "Yes" in r or "No" in r
-    assert "说一个二元问题" in send(client, 'ask')
-
-
 def test_say(client, app):
     assert "你必须说点什么" in send(client, 'say')
     assert "我记在脑子里啦" in send(client, 'say anything')
@@ -280,6 +274,17 @@ class SimpleCallback:
         return self.data
 
 
+def test_ask(client, requests_mock):
+    callback = SimpleCallback()
+    requests_mock.register_uri('GET', "https://yesno.wtf/api/", real_http=True)
+    requests_mock.post("/send_msg", json=callback.handler)
+    send(client, 'ask anything')
+    message = callback.data['message']
+    assert message[0]['type'] == 'reply'
+    assert "yes" in message[1]['data']['text'] or "no" in message[1]['data']['text']
+    assert "说一个二元问题" in send(client, 'ask')
+
+
 def test_cai(client, requests_mock):
     callback = SimpleCallback()
     matcher = re.compile('baidu|loli.net')
@@ -288,8 +293,7 @@ def test_cai(client, requests_mock):
     requests_mock.register_uri('POST', matcher, real_http=True)
 
     requests_mock.post("/set_group_ban", json=callback.handler)
-
-    # m.post("/delete_msg", json=callback.handler)
+    requests_mock.post("/delete_msg", json=callback.handler)
 
     def send_msg_callback(request, context):
         # print(request.json())
