@@ -430,6 +430,11 @@ def test_ky_reminder(app, requests_mock):
     ky_reminder(app)
     assert '年度研究生考试还有' in r.message
 
+    with app.app_context():
+        c = get_db()
+        mutex = c.execute("select * from misc where key = 'mutex'").fetchone()
+    assert mutex['value'] == '0'
+
 
 def test_ghs(client, requests_mock):
     r = MessageHandler()
