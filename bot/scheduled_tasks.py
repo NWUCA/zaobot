@@ -22,7 +22,7 @@ def ky_reminder(app):
             c.execute("insert into misc values ('mutex', '1')")
             remind_needed = 1
         elif mutex['value'] == '0':
-            c.execute("update misc set value = '1' where key = 'ky_date'")
+            c.execute("update misc set value = '1' where key = 'mutex'")
             remind_needed = 1
         else:
             remind_needed = 0
