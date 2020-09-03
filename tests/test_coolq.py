@@ -422,20 +422,6 @@ def test_ky_2(client):
     assert "年度研究生考试还有" in send(client, 'ky')
 
 
-def test_ky_reminder(app, requests_mock):
-    from bot.scheduled_tasks import ky_reminder
-
-    r = MessageHandler()
-    requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
-    ky_reminder(app)
-    assert '年度研究生考试还有' in r.message
-
-    with app.app_context():
-        c = get_db()
-        mutex = c.execute("select * from misc where key = 'mutex'").fetchone()
-    assert mutex['value'] == '0'
-
-
 def test_ghs(client, requests_mock):
     r = MessageHandler()
     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
@@ -443,11 +429,19 @@ def test_ghs(client, requests_mock):
     assert 'gkd' in r.message
 
 
-def test_ghs_reminder(app, requests_mock):
-    # 依赖上一个测试
-    from bot.scheduled_tasks import ghs_reminder
+def test_scheduled_task(app, requests_mock):
+    """
+    所有定时任务都在这里测试.
+    """
+    from bot.scheduled_tasks import init_background_tasks
 
     r = MessageHandler()
     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
-    ghs_reminder(app)
+
+    scheduler = init_background_tasks(app)
+
+    scheduler.get_job('ky_reminder').func()
+    assert '年度研究生考试还有' in r.message
+
+    scheduler.get_job('ghs_reminder').func()
     assert '距离上次 ghs 已经过去' in r.message
