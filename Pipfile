@@ -1,0 +1,20 @@
+[[source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+requests-mock = "*"
+flake8 = "*"
+
+[packages]
+flask = "*"
+pytest = "*"
+requests = "*"
+tenacity = "*"
+apscheduler = "*"
+pytelegrambotapi = "*"
+
+[requires]
+python_version = "3.8"
