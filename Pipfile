@@ -15,6 +15,7 @@ requests = "*"
 tenacity = "*"
 apscheduler = "*"
 pytelegrambotapi = "*"
+toml = "*"
 
 [requires]
 python_version = "3.8"

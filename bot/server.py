@@ -1,11 +1,15 @@
 import os
+from datetime import date
+
 from flask import Flask, request, abort, jsonify, current_app
+import telebot
+import toml
+
 from bot import db
 from bot import utils
 from bot.directive import Directive
 from bot.context import Context, PrivateContext, GroupContext
 from bot.scheduled_tasks import init_background_tasks
-from datetime import date
 
 
 def create_app(config=None):
@@ -14,15 +18,22 @@ def create_app(config=None):
     if config:
         # load the config if passed in
         app.config.from_mapping(config)
+    if app.config['TESTING'] is True:
+        # FIXME: load config from toml file will be added in flask 2.0
+        # relevant PR: https://github.com/pallets/flask/pull/3398
+        config_dict = toml.load(os.path.join(os.path.dirname(app.root_path), 'tests/test_settings.toml'))
+        app.config.from_mapping(config_dict)
     else:
         app.config.from_mapping(
             DATABASE=os.path.join(app.instance_path, 'database.db')
         )
         if not os.path.exists(app.instance_path):
             os.mkdir(app.instance_path)
-        app.config.from_pyfile(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
+        config_dict = toml.load(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
+        app.config.from_mapping(config_dict)
 
-    # print(os.getcwd())
+    app.telegram_bot = telebot.TeleBot(app.config['TELEGRAM_API_ADDRESS'])
+
     db.init_database(app)
 
     app.route('/', methods=['POST'])(handler)
@@ -78,8 +89,9 @@ def pre_process(context: Context):
     if context.message_type == 'group':
         utils.find_cai(context)
 
-        if context.group_id == current_app.config['FORWARDED_QQ_GROUP_ID']:
-            utils.send_to_tg(context)
+        for forward in current_app.config['FORWARD']:
+            if context.group_id == forward['QQ']:
+                utils.send_to_tg(context)  # FIXME: broken
 
         if context.group_id == current_app.config['GHS_NOTIFY_GROUP']:
             if utils.detect_blue(context):

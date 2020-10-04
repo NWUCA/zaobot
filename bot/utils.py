@@ -266,7 +266,7 @@ def find_cai(context):
 def tg_send_msg(text):
     requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
                   f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMessage",
-                  json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "text": text}, timeout=5)
+                  json={"chat_id": current_app.config['FORWARD'][0]['TG'], "text": text}, timeout=5)
 
 
 @retry(reraise=True, stop=stop_after_attempt(3))
@@ -279,7 +279,7 @@ def tg_send_media_group(text, photo_urls):
     media[0]["caption"] = text  # 插入消息内容
     requests.post(f"{current_app.config['TELEGRAM_API_ADDRESS']}/"
                   f"{current_app.config['TELEGRAM_API_TOKEN']}/sendMediaGroup",
-                  json={"chat_id": current_app.config['TELEGRAM_CHAT_ID'], "media": media},
+                  json={"chat_id": current_app.config['FORWARD'][0]['TG'], "media": media},
                   timeout=5)
 
 

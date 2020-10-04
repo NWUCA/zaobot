@@ -9,7 +9,6 @@ def app():
         'TESTING': True,
         'DATABASE': 'test.db'
     })
-    app.config.from_pyfile(os.path.join(os.path.dirname(app.root_path), 'tests/test_settings.cfg'))
 
     yield app
 
