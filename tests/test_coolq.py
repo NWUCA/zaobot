@@ -2,6 +2,7 @@ from datetime import datetime
 import sqlite3
 from pprint import pprint
 import re
+import json
 
 import pytest
 
@@ -285,9 +286,26 @@ def test_ask(client, requests_mock):
     assert "说一个二元问题" in send(client, 'ask')
 
 
-def test_cai(client, requests_mock):
-    callback = SimpleCallback()
-    matcher = re.compile('baidu|loli.net')
+class TelegramBotApiCallback:
+    def __init__(self):
+        self.qs = {}
+        self.rtn = {}
+
+    def handler(self, request, context):
+        self.qs = request.qs  # querystring
+        res = {"message_id": -1, "date": "fake", "chat": None}
+        if request.path.split('/')[-1] == 'sendmediagroup':
+            res = [res]
+        rtn = {"ok": True, "result": res}
+        self.rtn = rtn
+        return rtn
+
+
+def test_cai(client, requests_mock, app):
+    callback = TelegramBotApiCallback()
+
+    # 必须匹配开头, 否则会在 bot api 的 querystring 中被匹配到
+    matcher = re.compile('^https://www.baidu|^https://aip.baidu|^https://i.loli.net')
 
     requests_mock.register_uri('GET', matcher, real_http=True)
     requests_mock.register_uri('POST', matcher, real_http=True)
@@ -303,59 +321,64 @@ def test_cai(client, requests_mock):
     requests_mock.post("/send_msg", json=send_msg_callback)
 
     send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False)
-    assert callback.data != {}
+    assert callback.rtn != {}
 
-    callback.data = {}
+    callback.rtn = {}
     send(client, "我好菜啊", user_id=595811044, auto_prefix_slash=False, message_type='private')
-    assert callback.data == {}
+    assert callback.rtn == {}
 
     send(client, "我觉得还行", auto_prefix_slash=False)
-    assert callback.data == {}
+    assert callback.rtn == {}
 
     send(client,
          "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
          "url=https://www.baidu.com/img/bd_logo1.png]",
          user_id=595811044,
          auto_prefix_slash=False)
-    assert callback.data == {}
+    assert callback.rtn == {}
 
-    callback.data = {}
+    callback.rtn = {}
     send(client,
          "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
          "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
          user_id=595811044,
          auto_prefix_slash=False)
-    assert callback.data != {}
+    assert callback.rtn != {}
 
-    callback.data = {}
+    callback.rtn = {}
     send(client,
          "哈哈哈哈 [CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
          "url=https://i.loli.net/2020/05/11/Ft5OoR7p9TswHYk.png]",
          user_id=595811044,
          auto_prefix_slash=False)
-    assert callback.data != {}
+    assert callback.rtn != {}
 
 
-def test_send_to_tg(client, requests_mock, config):
-    callback = SimpleCallback()
-    requests_mock.post(f"{config['TELEGRAM_API_ADDRESS']}/"
-                       f"{config['TELEGRAM_API_TOKEN']}/sendMessage", json=callback.handler)
-    requests_mock.post(f"{config['TELEGRAM_API_ADDRESS']}/"
-                       f"{config['TELEGRAM_API_TOKEN']}/sendMediaGroup", json=callback.handler)
+def test_send_to_tg(client, requests_mock, config, app):
+    callback = TelegramBotApiCallback()
+    requests_mock.post(
+        app.config['TELEGRAM_API_ADDRESS'].format(app.config['TELEGRAM_API_TOKEN'], "sendMessage"),
+        json=callback.handler
+    )
+    requests_mock.get(
+        app.config['TELEGRAM_API_ADDRESS'].format(app.config['TELEGRAM_API_TOKEN'], "sendMediaGroup"),
+        json=callback.handler
+    )
 
     send(client, "我觉得还行", auto_prefix_slash=False)
-    print(callback.data)
-    assert callback.data['text'] == '[test_card(test_nickname)]: 我觉得还行'
+    print(callback.qs)
+    assert callback.qs['text'][0] == '[test_card(test_nickname)]: 我觉得还行'
 
     send(client,
          "[CQ:image,file=75990CA9A3853BD3532E44B689D24675.png,"
          "url=https://www.baidu.com/img/bd_logo1.png]",
          user_id=1195944745,
          auto_prefix_slash=False)
-    assert callback.data['media'] == \
+    print(callback.qs)
+    res = json.loads(callback.qs['media'][0])
+    assert res == \
            [{'type': 'photo', 'media': 'https://www.baidu.com/img/bd_logo1.png',
              'caption': '[test_card(test_nickname)]:  '}]
-    print(callback.data)
 
 
 def test_randomly_save_message_to_treehole(app):

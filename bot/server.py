@@ -32,7 +32,8 @@ def create_app(config=None):
         config_dict = toml.load(os.path.join(os.path.dirname(app.root_path), 'settings.cfg'))
         app.config.from_mapping(config_dict)
 
-    app.telegram_bot = telebot.TeleBot(app.config['TELEGRAM_API_ADDRESS'])
+    app.telegram_bot = telebot.TeleBot(app.config['TELEGRAM_API_TOKEN'])
+    telebot.apihelper.API_URL = app.config['TELEGRAM_API_ADDRESS']
 
     db.init_database(app)
 
@@ -91,7 +92,7 @@ def pre_process(context: Context):
 
         for forward in current_app.config['FORWARD']:
             if context.group_id == forward['QQ']:
-                utils.send_to_tg(context)  # FIXME: broken
+                utils.send_to_tg(context, forward['TG'])
 
         if context.group_id == current_app.config['GHS_NOTIFY_GROUP']:
             if utils.detect_blue(context):

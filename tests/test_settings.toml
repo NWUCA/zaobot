@@ -1,6 +1,6 @@
 SECRET_KEY = 'abc'
 
-TELEGRAM_API_ADDRESS = "https://fake"
+TELEGRAM_API_ADDRESS = "https://fake/bot{0}/{1}"
 TELEGRAM_API_TOKEN = "test"
 
 ALLOWED_GROUP = [

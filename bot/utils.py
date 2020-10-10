@@ -9,6 +9,7 @@ from typing import List, Dict, Union
 import requests
 from flask import current_app
 from tenacity import retry, stop_after_attempt
+from telebot.types import InputMediaPhoto
 
 from bot.db import get_db
 from bot.context import Context, GroupContext
@@ -283,17 +284,20 @@ def tg_send_media_group(text, photo_urls):
                   timeout=5)
 
 
-def send_to_tg(context: GroupContext):
+def send_to_tg(context: GroupContext, group_id: int):
     group_card = context.group_card
     nickname = context.nickname
     msg_prefix = f"[{group_card}({nickname})]:"
-    image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)\]")
+    image_re = re.compile(r"\[CQ:image,file=(.*?),url=(.*?)]")
     image_urls = list(map(lambda a: a[1], re.findall(image_re, context.message)))
-    msg = re.sub(image_re, lambda a: " ", context.message)
+    text = re.sub(image_re, lambda a: " ", context.message)
+    msg = f"{msg_prefix} {text}"
     if image_urls:
-        tg_send_media_group(f"{msg_prefix} {msg}", image_urls)
+        medias = [InputMediaPhoto(url) for url in image_urls]
+        medias[0].caption = msg  # 插入消息内容
+        current_app.telegram_bot.send_media_group(group_id, medias)
     else:
-        tg_send_msg(f"{msg_prefix} {msg}")
+        current_app.telegram_bot.send_message(group_id, msg)
 
 
 def randomly_save_message_to_treehole(context: Context):
