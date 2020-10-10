@@ -34,6 +34,7 @@ def create_app(config=None):
 
     app.telegram_bot = telebot.TeleBot(app.config['TELEGRAM_API_TOKEN'])
     telebot.apihelper.API_URL = app.config['TELEGRAM_API_ADDRESS']
+    telebot.apihelper.RETRY_ON_ERROR = True
 
     db.init_database(app)
 

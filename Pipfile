@@ -10,9 +10,7 @@ flake8 = "*"
 
 [packages]
 flask = "*"
-pytest = "*"
 requests = "*"
-tenacity = "*"
 apscheduler = "*"
 pytelegrambotapi = "*"
 toml = "*"
