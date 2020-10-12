@@ -232,7 +232,7 @@ class Directive:
 
     def wyy(self):
         """网抑云"""
-        r = requests.get('https://nd.2890.ltd/api/?format=text')
+        r = requests.get(f'https://nd.2890.ltd/api/?format=text&id={random.randrange(int(1e9))}')
         return reply(r.text, at_sender=False)
 
     @admin_required
