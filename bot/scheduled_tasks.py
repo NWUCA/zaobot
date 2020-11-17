@@ -1,9 +1,9 @@
+from datetime import date
+import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from bot.utils import send
 from bot.db import get_db
 from bot.context import GroupContext
-from datetime import date
-import time
 
 
 class ModifiedBackgroundScheduler(BackgroundScheduler):
@@ -13,30 +13,10 @@ class ModifiedBackgroundScheduler(BackgroundScheduler):
 
     def add_job(self, func, *_args, **_kwargs):  # args and kwargs are already used
         """
-        对每个 job 添加了 app_context 以及互斥操作
+        对每个 job 添加 app_context
         """
         def wrapper(*args, **kwargs):
-            with self.app.app_context():
-                c = get_db()
-                c.execute('BEGIN EXCLUSIVE')
-                mutex = c.execute("select * from misc where key = 'mutex'").fetchone()
-                if mutex is None:
-                    c.execute("insert into misc values ('mutex', '1')")
-                    remind_needed = 1
-                elif mutex['value'] == '0':
-                    c.execute("update misc set value = '1' where key = 'mutex'")
-                    remind_needed = 1
-                else:
-                    remind_needed = 0
-                c.commit()  # end of exclusive transaction
-
-                if remind_needed:
-                    func(self.app, *args, **kwargs)
-
-                    time.sleep(1)  # 为了防止过早执行完而导致其他 worker 继续执行
-
-                    c.execute("update misc set value = '0' where key = 'mutex'")
-                    c.commit()
+            func(self.app, *args, **kwargs)
 
         super().add_job(wrapper, *_args, **_kwargs)
 
@@ -46,11 +26,35 @@ def init_background_tasks(app):
     不同 job 之间的间隔应大于 1 分钟, 否则会导致某些 job 不被执行.
     job 的执行函数第一个参数为当前的 app
     """
-    apsched = ModifiedBackgroundScheduler(app)
-    apsched.add_job(ky_reminder, trigger='cron', hour=12, minute=0, id='ky_reminder')
-    apsched.add_job(ghs_reminder, trigger='cron', hour=21, minute=30, id='ghs_reminder')
-    apsched.start()
-    return apsched
+    with app.app_context():
+        c = get_db()
+        c.execute('BEGIN EXCLUSIVE')
+        mutex = c.execute("select * from misc where key = 'mutex'").fetchone()
+        if mutex is None:
+            c.execute("insert into misc values ('mutex', '1')")
+            start_flag = 1
+        elif mutex['value'] == '0':
+            c.execute("update misc set value = '1' where key = 'mutex'")
+            start_flag = 1
+        else:
+            start_flag = 0
+        c.commit()  # end of exclusive transaction
+    if start_flag:
+        apsched = ModifiedBackgroundScheduler(app)
+        apsched.add_job(ky_reminder, trigger='cron', hour=12, minute=0, id='ky_reminder')
+        apsched.add_job(ghs_reminder, trigger='cron', hour=21, minute=30, id='ghs_reminder')
+        apsched.start()
+
+        def unlock():
+            with app.app_context():
+                c = get_db()
+                c.execute("update misc set value = '0' where key = 'mutex'")
+                c.commit()
+
+        atexit.register(unlock)
+
+        return apsched
+    return None
 
 
 def ky_reminder(app):
