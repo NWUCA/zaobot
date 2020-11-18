@@ -1,5 +1,6 @@
 from datetime import date
 import atexit
+import sqlite3
 from apscheduler.schedulers.background import BackgroundScheduler
 from bot.utils import send
 from bot.db import get_db
@@ -16,7 +17,8 @@ class ModifiedBackgroundScheduler(BackgroundScheduler):
         对每个 job 添加 app_context
         """
         def wrapper(*args, **kwargs):
-            func(self.app, *args, **kwargs)
+            with self.app.app_context():
+                func(self.app, *args, **kwargs)
 
         super().add_job(wrapper, *_args, **_kwargs)
 
@@ -47,9 +49,12 @@ def init_background_tasks(app):
 
         def unlock():
             with app.app_context():
-                c = get_db()
-                c.execute("update misc set value = '0' where key = 'mutex'")
-                c.commit()
+                try:
+                    c = get_db()
+                    c.execute("update misc set value = '0' where key = 'mutex'")
+                    c.commit()
+                except sqlite3.OperationalError:
+                    pass
 
         atexit.register(unlock)
 
@@ -79,6 +84,6 @@ def ghs_reminder(app):
     period = (date.today() - date.fromisoformat(last_ghs_date)).days
     if period > 0:
         send(GroupContext.build(group_id=app.config["GHS_NOTIFY_GROUP"]),
-             message=f"[CQ:at,qq=all] 提醒：距离上次 ghs 已经过去了{period}天。")
+             message=f"提醒：距离上次 ghs 已经过去了{period}天。")
     else:
         return

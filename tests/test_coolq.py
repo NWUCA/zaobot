@@ -461,6 +461,11 @@ def test_scheduled_task(app, requests_mock):
     r = MessageHandler()
     requests_mock.post('http://127.0.0.1:5700/send_msg', json=r.handler)
 
+    with app.app_context():
+        c = get_db()
+        c.execute("update misc set value = '0' where key = 'mutex'")
+        c.commit()
+
     scheduler = init_background_tasks(app)
 
     scheduler.get_job('ky_reminder').func()
