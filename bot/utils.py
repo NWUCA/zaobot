@@ -295,3 +295,16 @@ def detect_blue(context):
     return True for blue message, False otherwise
     """
     return len(list(filter(lambda x: x in context.message, current_app.config['BLUE_WORDS']))) > 0
+
+
+def query_ky():
+    c = get_db()
+    data = c.execute('select * from misc where key = "ky_date"').fetchone()
+    if data is None:
+        return "管理员还未设定考研时间，使用 /setky 设定考研时间"
+    ky_date_str = data['value']
+    ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
+    days_to_ky = (ky_date - date.today()).days
+    if days_to_ky in (0, -1):
+        return f"{ky_date_str[:4]}年度研究生考试正在进行中"
+    return f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天"

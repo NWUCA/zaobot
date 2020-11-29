@@ -10,6 +10,7 @@ from bot.db import get_db
 from bot.utils import reply, average_rest_time, send
 from bot.utils import xiuxian_level, start_xiuxian
 from bot.utils import admin_required, private_message_only
+from bot.utils import query_ky
 from bot.context import Context
 
 
@@ -260,11 +261,4 @@ class Directive:
         """
         查询距离考研的天数
         """
-        c = get_db()
-        data = c.execute("select * from misc where key = 'ky_date'").fetchone()
-        if data is None:
-            return reply("异常，请联系管理员重置考研时间", at_sender=False)
-        ky_date_str = data['value']
-        ky_date = date(int(ky_date_str[:4]), int(ky_date_str[4:6]), int(ky_date_str[6:]))
-        days_to_ky = (ky_date - date.today()).days
-        return reply(f"距离{ky_date_str[:4]}年度研究生考试还有{days_to_ky}天")
+        return reply(query_ky())

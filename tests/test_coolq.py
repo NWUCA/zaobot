@@ -430,7 +430,7 @@ def test_webhook(client, requests_mock):
 
 
 def test_ky_1(client):
-    assert "异常，请联系管理员重置考研时间" in send(client, 'ky')
+    assert "管理员还未设定考研时间" in send(client, 'ky')
 
 
 def test_setky(client):
