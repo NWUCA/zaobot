@@ -162,7 +162,7 @@ def test_private_only_decorator(client):
 def test_rest_statistic(client):
     response = send(client, 'rest_statistic', message_type='private')
     print(response)
-    assert "平均" in response
+    assert "暂无数据。" in response
     assert "暂无数据。" in send(client, 'rest_statistic', user_id=101, message_type='private')
 
 
