@@ -262,3 +262,20 @@ class Directive:
         查询距离考研的天数
         """
         return reply(query_ky())
+
+
+    def q(self):
+      """
+      按照知识图谱，回答一个问题
+      """
+      try:
+        question = self.context.args[0]
+      except IndexError:
+        return reply("你必须问点什么。")
+
+      r = requests.get(f'https://api.ownthink.com/bot?spoken={question}')
+      try:
+        ans = r.json()['data']['info']['text']
+        return reply(ans, at_sender=False)
+      except (IndexError, KeyError):
+        return reply("上游似乎出锅了QAQ，或者你输入了奇怪的东西WWW")

@@ -473,3 +473,29 @@ def test_scheduled_task(app, requests_mock):
 
     scheduler.get_job('ghs_reminder').func()
     assert '距离上次 ghs 已经过去' in r.message
+
+
+def test_q(client, requests_mock):
+  class Callback:
+    def __init__(self):
+      self.data = {
+          "message": "success",
+          "data": {
+            "type": 5000,
+            "info": {
+              "text": "姚明的身高是226厘米"
+            }
+          }
+        }
+      self.status_code = 200
+
+    def handler(self, request, context):
+      context.status_code = self.status_code
+      return self.data
+
+  callback = Callback()
+
+  requests_mock.get("https://api.ownthink.com/bot?spoken=姚明多高啊？", json=callback.handler)
+  r = send(client, 'q 姚明多高啊？')
+  print(r)
+  assert "姚明的身高是226厘米" in r
