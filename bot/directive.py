@@ -69,7 +69,7 @@ class Directive:
                                  f'where id ={self.context.user_id} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
         current_time = datetime.fromtimestamp(self.context.time)
         if current_user is None \
-            or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=24):
+                or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=24):
             return reply('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～')
 
         wake_time = datetime.fromtimestamp(current_user['wake_timestamp'])
@@ -177,8 +177,8 @@ class Directive:
         rest_list = c.execute('select * from rest_record where id = ?', (self.context.user_id,)).fetchall()
         valid_record = [i for i in rest_list if i['sleep_time'] != '']
         msg = average_rest_time(valid_record, 7) + \
-              average_rest_time(valid_record, 30) + \
-              average_rest_time(valid_record, 365)
+            average_rest_time(valid_record, 30) + \
+            average_rest_time(valid_record, 365)
         if msg == "":
             return reply("暂无数据。")
         else:
