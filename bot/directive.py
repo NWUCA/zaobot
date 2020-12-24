@@ -69,7 +69,7 @@ class Directive:
                                  f'where id ={self.context.user_id} ORDER BY wake_timestamp DESC LIMIT 1').fetchone()
         current_time = datetime.fromtimestamp(self.context.time)
         if current_user is None \
-                or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=24):
+            or current_time - datetime.fromtimestamp(current_user['wake_timestamp']) > timedelta(hours=24):
             return reply('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～')
 
         wake_time = datetime.fromtimestamp(current_user['wake_timestamp'])
@@ -177,8 +177,8 @@ class Directive:
         rest_list = c.execute('select * from rest_record where id = ?', (self.context.user_id,)).fetchall()
         valid_record = [i for i in rest_list if i['sleep_time'] != '']
         msg = average_rest_time(valid_record, 7) + \
-            average_rest_time(valid_record, 30) + \
-            average_rest_time(valid_record, 365)
+              average_rest_time(valid_record, 30) + \
+              average_rest_time(valid_record, 365)
         if msg == "":
             return reply("暂无数据。")
         else:
@@ -249,9 +249,9 @@ class Directive:
                 raise ValueError
             data = c.execute("select * from misc where key = 'ky_date'").fetchone()
             if data is None:
-                c.execute("insert into misc values ('ky_date', ?)", (ky_date_str, ))
+                c.execute("insert into misc values ('ky_date', ?)", (ky_date_str,))
             else:
-                c.execute("update misc set value = ? where key = 'ky_date'", (ky_date_str, ))
+                c.execute("update misc set value = ? where key = 'ky_date'", (ky_date_str,))
             c.commit()
             return reply("设置成功")
         except (IndexError, ValueError):
@@ -263,19 +263,18 @@ class Directive:
         """
         return reply(query_ky())
 
-
     def q(self):
-      """
-      按照知识图谱，回答一个问题
-      """
-      try:
-        question = self.context.args[0]
-      except IndexError:
-        return reply("你必须问点什么。")
+        """
+        按照知识图谱，回答一个问题
+        """
+        try:
+            question = self.context.args[0]
+        except IndexError:
+            return reply("你必须问点什么。")
 
-      r = requests.get(f'https://api.ownthink.com/bot?spoken={question}')
-      try:
-        ans = r.json()['data']['info']['text']
-        return reply(ans, at_sender=False)
-      except (IndexError, KeyError):
-        return reply("上游似乎出锅了QAQ，或者你输入了奇怪的东西WWW")
+        r = requests.get(f'https://api.ownthink.com/bot?spoken={question}')
+        try:
+            ans = r.json()['data']['info']['text']
+            return reply(ans, at_sender=False)
+        except (IndexError, KeyError):
+            return reply("上游似乎出锅了QAQ，或者你输入了奇怪的东西WWW")

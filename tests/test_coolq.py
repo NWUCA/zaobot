@@ -10,14 +10,14 @@ from bot.db import get_db
 
 
 def data_generator(
-        message,
-        user_id: int = 1,
-        time: datetime.isoformat = '2019-01-01 00:08:00',
-        role: str = 'member',
-        card: str = 'test_card',
-        nickname: str = 'test_nickname',
-        message_type: str = 'group',
-        auto_prefix_slash: bool = True
+    message,
+    user_id: int = 1,
+    time: datetime.isoformat = '2019-01-01 00:08:00',
+    role: str = 'member',
+    card: str = 'test_card',
+    nickname: str = 'test_nickname',
+    message_type: str = 'group',
+    auto_prefix_slash: bool = True
 ):
     if auto_prefix_slash:
         message = "/" + message
@@ -476,26 +476,26 @@ def test_scheduled_task(app, requests_mock):
 
 
 def test_q(client, requests_mock):
-  class Callback:
-    def __init__(self):
-      self.data = {
-          "message": "success",
-          "data": {
-            "type": 5000,
-            "info": {
-              "text": "姚明的身高是226厘米"
+    class Callback:
+        def __init__(self):
+            self.data = {
+                "message": "success",
+                "data": {
+                    "type": 5000,
+                    "info": {
+                        "text": "姚明的身高是226厘米"
+                    }
+                }
             }
-          }
-        }
-      self.status_code = 200
+            self.status_code = 200
 
-    def handler(self, request, context):
-      context.status_code = self.status_code
-      return self.data
+        def handler(self, request, context):
+            context.status_code = self.status_code
+            return self.data
 
-  callback = Callback()
+    callback = Callback()
 
-  requests_mock.get("https://api.ownthink.com/bot?spoken=姚明多高啊？", json=callback.handler)
-  r = send(client, 'q 姚明多高啊？')
-  print(r)
-  assert "姚明的身高是226厘米" in r
+    requests_mock.get("https://api.ownthink.com/bot?spoken=姚明多高啊？", json=callback.handler)
+    r = send(client, 'q 姚明多高啊？')
+    print(r)
+    assert "姚明的身高是226厘米" in r
