@@ -272,9 +272,11 @@ class Directive:
         except IndexError:
             return reply("你必须问点什么。")
 
-        r = requests.get(f'https://api.ownthink.com/bot?spoken={question}')
         try:
+            r = requests.get(f'https://api.ownthink.com/bot?spoken={question}', timeout=2.0)
             ans = r.json()['data']['info']['text']
             return reply(ans, at_sender=False)
         except (IndexError, KeyError):
             return reply("上游似乎出锅了QAQ，或者你输入了奇怪的东西WWW")
+        except requests.exceptions.ReadTimeout:
+            return reply("没有找到这个问题的答案")
