@@ -499,3 +499,40 @@ def test_q(client, requests_mock):
     r = send(client, 'q 姚明多高啊？')
     print(r)
     assert "姚明的身高是226厘米" in r
+
+
+def test_json_extractor(client, requests_mock):
+    text = r'[CQ:json,data={"config":{"type":"normal"&#44;"ctime":1610592580&#44;"forward":true&#44;"token' \
+           r'":"a386f06d8f0621377feedcc0e7074a23"&#44;"autosize":true}&#44;"prompt":"&#91;分享&#93;【男子约见男网友睡醒钱被转走 ' \
+           r'：“我对不起老婆孩子”…"&#44;"app":"com.tencent.structmsg"&#44;"ver":"0.0.0.1"&#44;"view":"news"&#44;"meta":{' \
+           r'"news":{"action":""&#44;"source_url":""&#44;"android_pkg_name":""&#44;"jumpUrl":"https:\/\/m.okjike.com' \
+           r'\/originalPosts\/5ffecea1454ac60018b53df1?s=ewoidSI6ICI1YWY4MzQzNmU4YzZiMTAwMTE5OTZhNzEiCn0%3D&amp' \
+           r';utm_source=qq"&#44;"preview":"https:\/\/external-30160.picsz.qpic.cn\/65e1ea257c736c75507a80746ccd660b' \
+           r'\/jpg1"&#44;"title":"【男子约见男网友睡醒钱被转走 ' \
+           r'：“我对不起老婆孩子”…"&#44;"app_type":1&#44;"source_icon":""&#44;"tag":"即刻"&#44;"appid":1104252239&#44;"desc' \
+           r'":"即刻App，身边最有意思的人都在玩了"}}&#44;"desc":"新闻"}] '
+    text2 = r'[CQ:json,data={"app":"com.tencent.miniapp_01"&#44;"config":{' \
+            r'"autoSize":0&#44;"ctime":1609952789&#44;"forward":1&#44;"height":0&#44;"token' \
+            r'":"02ca89d519e7d1c6b39cad42ed6e0606"&#44;"type":"normal"&#44;"width":0}&#44;"desc' \
+            r'":"知乎问答：你见过最大的扁桃体结石有多大？"&#44;"extra":{' \
+            r'"app_type":1&#44;"appid":100490701&#44;"uin":646801992}&#44;"meta":{"detail_1":{' \
+            r'"appid":"1110081493"&#44;"desc":"来自话题「扁桃体」，已有 171 个回答，305 人关注"&#44;"host":{"nick":"       ' \
+            r'"&#44;"uin":646801992}&#44;"icon":"http://miniapp.gtimg.cn/public/appicon' \
+            r'/0d7421ea21950d2b895d0c04c7ac2712_200.jpg"&#44;"preview":"https://pic3.zhimg.com/v2' \
+            r'-40d33375a229b8bb9a32fddff1493b64.jpg"&#44;"qqdocurl":"http://www.zhihu.com/question/322903679' \
+            r'?utm_source=qq&amp;utm_medium=social&amp;utm_oi=657656659866947584"&#44;"scene":1036&#44' \
+            r';"shareTemplateData":{}&#44;"shareTemplateId":"8C8E89B49BE609866298ADDFF2DBABA4"&#44;"title' \
+            r'":"知乎问答：你见过最大的扁桃体结石有多大？"&#44;"url":"m.q.qq.com/a/s/40c2d9c863258c04e12a8f727b2e089a"}}&#44' \
+            r';"needShareCallBack":false&#44;"prompt":"&#91;QQ小程序&#93;知乎问答：你见过最大的扁桃体结石有多大？"&#44;"ver":"1.0.0.19"&#44' \
+            r';"view":"view_8C8E89B49BE609866298ADDFF2DBABA4"}] '
+
+    def send_msg_callback(request, context):
+        # print(request.json())
+        m = request.json()['message']
+        assert "男子约见男网友睡醒钱被转走" in m or "你见过最大的扁桃体结石有多大" in m
+        return {"data": "success"}
+
+    requests_mock.post("/send_msg", json=send_msg_callback)
+
+    send(client, text, auto_prefix_slash=False)
+    send(client, text2, auto_prefix_slash=False)

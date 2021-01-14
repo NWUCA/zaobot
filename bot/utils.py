@@ -4,6 +4,8 @@ import time
 import re
 import random
 import functools
+import html
+import json
 from typing import List, Dict, Union
 
 import requests
@@ -259,6 +261,23 @@ def find_cai(context):
 
         processed_msg = re.sub(r"\[CQ:image,file=(.*?),url=(.*?)]", sub, msg)
         send(context, f"违规内容：{context.name} {datetime.fromtimestamp(context.time)} {processed_msg}")
+
+
+def process_json_message(context: GroupContext):
+    match = re.search(r"\[CQ:json,data=(.*?)]", context.message)
+
+    if not match:
+        return
+
+    data = match[1]
+    data = html.unescape(data)
+    data = json.loads(data)['meta']
+    if data.get('detail_1'):
+        data = data['detail_1']
+        send(context, f"标题: {data.get('title', '')}\n描述: {data.get('desc', '')}\n{data.get('qqdocurl', '')}")
+    if data.get('news'):
+        data = data['news']
+        send(context, f"标题: {data.get('title', '')}\n{data.get('jumpUrl', '')}")
 
 
 def send_to_tg(context: GroupContext, group_id: int):

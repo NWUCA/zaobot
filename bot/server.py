@@ -90,6 +90,7 @@ def pre_process(context: Context):
 
     if context.message_type == 'group':
         utils.find_cai(context)
+        utils.process_json_message(context)
 
         for forward in current_app.config['FORWARD']:
             if context.group_id == forward['QQ']:

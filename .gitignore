@@ -20,6 +20,7 @@ __pycache__/
 htmlcov/
 .coverage
 .pytest_cache/
+test.db
 
 # Flask stuff:
 instance/
