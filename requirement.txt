@@ -1,0 +1,4 @@
+aiofiles==0.7.0
+nb-cli==0.4.2
+urllib3==1.25.8
+httpx==0.17.0
