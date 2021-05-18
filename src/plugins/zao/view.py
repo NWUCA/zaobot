@@ -56,9 +56,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     msg = ''
     for index, boy in enumerate(zao_boys, 1):
         msg += f'{index}. {boy.qq_nickname}, {boy.zao_datetime.hour}:{boy.zao_datetime.minute}\x0a'
-    if msg:
-        msg = msg[:-1]
-    await zaoguys.finish(msg)
+    await zaoguys.finish(msg[:-1])
 
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 @scheduler.scheduled_job('cron', hour=4)
