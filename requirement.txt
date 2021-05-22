@@ -1,5 +1,8 @@
+nonebot-adapter-cqhttp==2.0.0a13
+nonebot-plugin-apscheduler==0.1.2
 aiosqlite==0.17.0
 sqlalchemy==1.4.15
 nb-cli==0.4.2
 urllib3==1.25.8
 httpx==0.17.0
+Pillow==6.2.0
