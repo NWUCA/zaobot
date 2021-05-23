@@ -14,7 +14,7 @@ choyen = on_shell_command('choyen', aliases={'5000'}, parser=choyen_parser)
 async def _(bot: Bot, event: Event, state: T_State):
     top = getattr(state['args'], 'top', None)
     bottom = getattr(state['args'], 'bottom', None)
-    if not top and bottom:
+    if not top or not bottom:
         return
     top = quote(top)
     bottom = quote(bottom)
