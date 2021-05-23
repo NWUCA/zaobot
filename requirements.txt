@@ -5,4 +5,4 @@ sqlalchemy==1.4.15
 nb-cli==0.4.2
 urllib3==1.25.8
 httpx==0.17.0
-Pillow==6.2.0
+pillow==8.2.0
