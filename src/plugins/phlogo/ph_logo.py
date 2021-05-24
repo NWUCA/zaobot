@@ -86,6 +86,6 @@ def combine_img(left_text:str, right_text, font_size:int, out_put_path:str):
     bg_img.save(out_put_path)
 
 if __name__ == "__main__":
-    left_text = sys.argv[1]
-    right_text = sys.argv[2]
+    left_text = input()
+    right_text = input()
     combine_img(left_text, right_text, FONT_SIZE, PARENT_PATH / 'ph.png')

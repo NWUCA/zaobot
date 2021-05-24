@@ -19,16 +19,21 @@ ph_parser.add_argument('right')
 ph = on_shell_command('ph', parser=ph_parser)
 @ph.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    left = safe(getattr(state['args'], 'left', None))
-    right = safe(getattr(state['args'], 'right', None))
+    left = getattr(state['args'], 'left', None)
+    right = getattr(state['args'], 'right', None)
     if not left or not right:
         return
 
     async with lock:
         try:
-            cmd = f'python {PARENT_PATH}/ph_logo.py {left} {right}'
-            process = await asyncio.create_subprocess_shell(cmd)
-        except:
+            process = await asyncio.create_subprocess_shell(
+                f'python {PARENT_PATH}/ph_logo.py',
+                stdin=asyncio.subprocess.PIPE,
+            )
+            process.stdin.write(f'{left}\n'.encode())
+            process.stdin.write(f'{right}\n'.encode())
+        except Exception as e:
+            raise e
             return
         await process.wait()
         await ph.finish([
