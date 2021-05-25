@@ -5,9 +5,10 @@
 # @FileName: ph_logo.py
 # @Software: PyCharm
 
+import base64
+from io import BytesIO
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-import sys
-from pathlib import  Path
 
 LEFT_PART_VERTICAL_BLANK_MULTIPLY_FONT_HEIGHT = 2
 LEFT_PART_HORIZONTAL_BLANK_MULTIPLY_FONT_WIDTH = 1 / 4
@@ -74,7 +75,7 @@ def create_right_part_img(text: str, font_size: int):
     return image
 
 
-def combine_img(left_text:str, right_text, font_size:int, out_put_path:str):
+def combine_img(left_text:str, right_text, font_size:int):
     left_img = create_left_part_img(left_text, font_size)
     right_img = create_right_part_img(right_text, font_size)
     blank = 30
@@ -83,9 +84,15 @@ def combine_img(left_text:str, right_text, font_size:int, out_put_path:str):
     bg_img = Image.new('RGBA', (bg_img_width, bg_img_height), BG_COLOR)
     bg_img.paste(left_img, (blank, 0))
     bg_img.paste(right_img, (blank + left_img.width, int((bg_img_height - right_img.height) / 2)), mask=right_img)
-    bg_img.save(out_put_path)
+    return bg_img
+    
 
 if __name__ == "__main__":
     left_text = input()
     right_text = input()
-    combine_img(left_text, right_text, FONT_SIZE, PARENT_PATH / 'ph.png')
+    img = combine_img(left_text, right_text, FONT_SIZE)
+    with BytesIO() as buffer:
+        buffer.name = 'ph.png'
+        img.save(buffer)
+        buffer.seek(0)
+        print( base64.b64encode(buffer.read()) )

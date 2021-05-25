@@ -1,3 +1,5 @@
+import base64
+import sys
 import asyncio
 from pathlib import  Path
 
@@ -11,6 +13,7 @@ from .util import safe
 PARENT_PATH = Path(__file__).parent
 IMAGE_PATH = (PARENT_PATH / 'ph.png').resolve()
 lock = asyncio.Lock()
+encoding = 'gbk' if (sys.platform == 'win32') else 'utf-8'
 
 ph_parser = ArgumentParser()
 ph_parser.add_argument('left')
@@ -24,18 +27,16 @@ async def _(bot: Bot, event: Event, state: T_State):
     if not left or not right:
         return
 
-    async with lock:
-        try:
-            process = await asyncio.create_subprocess_shell(
-                f'python {PARENT_PATH}/ph_logo.py',
-                stdin=asyncio.subprocess.PIPE,
-            )
-            process.stdin.write(f'{left}\n'.encode())
-            process.stdin.write(f'{right}\n'.encode())
-        except Exception as e:
-            raise e
-            return
-        await process.wait()
-        await ph.finish([
-            {"type": "image", "data": {"file": f'file:///{IMAGE_PATH}'}},
-        ])
+    process = await asyncio.create_subprocess_shell(
+        f'python {PARENT_PATH}/ph_logo.py',
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await process.communicate(
+        f'{left}\n{right}\n'.encode(encoding)
+    )
+    img_base64 = 'base64://' + stdout.decode(encoding)[2:-3]
+    await process.wait()
+    await ph.finish([
+        {"type": "image", "data": {"file": img_base64}},
+    ])
