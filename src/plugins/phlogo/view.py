@@ -35,7 +35,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     stdout, _ = await process.communicate(
         f'{left}\n{right}\n'.encode(encoding)
     )
-    img_base64 = 'base64://' + stdout.decode(encoding)[2:-3]
+    img_base64 = 'base64://' + stdout.decode(encoding).strip()[2:-1]
     await process.wait()
     await ph.finish([
         {"type": "image", "data": {"file": img_base64}},
