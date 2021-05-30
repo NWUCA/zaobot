@@ -6,3 +6,5 @@ nb-cli==0.4.2
 urllib3==1.25.8
 httpx==0.17.0
 pillow==8.2.0
+wordcloud==1.8.1
+jieba==0.42.1
