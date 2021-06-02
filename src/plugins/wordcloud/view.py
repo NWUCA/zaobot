@@ -38,4 +38,6 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
 store = on_message(block=False, permission=GROUP, priority=10)
 @store.handle()
 async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
-    await store_msg(event.group_id, event.raw_message)
+    text = event.get_plaintext().strip()
+    if text:
+        await store_msg(event.group_id, text)
