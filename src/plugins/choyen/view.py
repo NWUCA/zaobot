@@ -21,7 +21,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     print(top, bottom)
     await choyen.finish([
         {"type": "image", "data": {
-            "file": f'http://5000choyen.app.cyberrex.ml/image?top={top}&bottom={bottom}'
+            "file": f'http://zhangjunbo.top:18003/api/v1/gen?top={top}&bottom={bottom}'
         }},
     ])
 
