@@ -11,7 +11,7 @@ def get_ky_date() -> date:
 def set_ky_date(month: int, day: int):
     ky_date = date(datetime.now().year, month, day)
     if ky_date <= datetime.now().date():
-        ky_date.year += 1
+        ky_date = date(ky_date.year + 1, month, day)
     with open(ky_file, 'wb') as f:
         pickle.dump(ky_date, f)
 
