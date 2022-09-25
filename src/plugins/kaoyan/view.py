@@ -4,7 +4,7 @@ from nonebot import on_command, on_shell_command, permission
 from nonebot.rule import ArgumentParser
 from nonebot.typing import T_State
 from nonebot.adapters import Bot, Event
-from nonebot.adapters.cqhttp.permission import GROUP_ADMIN, GROUP_OWNER
+from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 
 from .data_source import get_ky_date, set_ky_date
 

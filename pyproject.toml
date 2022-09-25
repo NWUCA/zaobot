@@ -6,9 +6,17 @@ authors = []
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-nonebot2 = "^2.0.0.a1"
-nb-cli = "^0.1.0"
+python = "^3.8"
+nonebot2 = "^2.0.0b5"
+nb-cli = "^0.6.7"
+nonebot-adapter-cqhttp = "^2.0.0a13"
+nonebot-plugin-apscheduler = "^0.1.2"
+aiosqlite = "^0.17.0"
+SQLAlchemy = "^1.4.15"
+urllib3 = "^1.25.8"
+Pillow = "^8.2.0"
+wordcloud = "^1.8.1"
+jieba = "^0.42.1"
 
 [tool.poetry.dev-dependencies]
 nonebot-test = "^0.1.0"

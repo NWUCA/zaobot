@@ -5,8 +5,8 @@ from nonebot import on_message, on_shell_command
 from nonebot.rule import ArgumentParser
 from nonebot.typing import T_State
 from nonebot.adapters import Bot
-from nonebot.adapters.cqhttp.event import GroupMessageEvent
-from nonebot.adapters.cqhttp.permission import GROUP
+from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot.adapters.onebot.v11 import GROUP
 
 from .tables import fetch_msg, store_msg
 

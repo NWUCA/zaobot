@@ -3,7 +3,7 @@ from nonebot import on_command, on_shell_command, require
 from nonebot.rule import ArgumentParser
 from nonebot.typing import T_State
 from nonebot.adapters import Bot, Event
-from nonebot.adapters.cqhttp.permission import GROUP_ADMIN, GROUP_OWNER
+from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 
 from .tables import clear_zao_boys, get_zao_boy, create_zao_boy, set_wan_boy, get_all_boys
 
