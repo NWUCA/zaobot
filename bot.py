@@ -3,7 +3,7 @@
 
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter
-
+import database
 # Custom your logger
 # 
 # from nonebot.log import logger, default_format
@@ -19,12 +19,12 @@ app = nonebot.get_asgi()
 
 driver = nonebot.get_driver()
 driver.register_adapter(Adapter)
+driver.on_startup(lambda: database.connect(driver.config.database_url))
+driver.on_shutdown(database.disconnect)
 
 # nonebot.load_builtin_plugins()
 # nonebot.load_from_toml("pyproject.toml")
-
 nonebot.load_plugin('nonebot_plugin_apscheduler')
-# nonebot.load_plugin('src.plugins._database')
 nonebot.load_plugins('src/plugins')
 
 # Modify some config / config depends on loaded configs

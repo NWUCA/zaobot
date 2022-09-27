@@ -8,7 +8,7 @@ from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.adapters.onebot.v11 import GROUP
 
-from .tables import fetch_msg, store_msg
+from .data_source import fetch_msg, store_msg
 
 PARENT_PATH = Path(__file__).parent
 

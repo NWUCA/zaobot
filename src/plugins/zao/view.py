@@ -5,7 +5,7 @@ from nonebot.typing import T_State
 from nonebot.adapters import Bot, Event
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 
-from .tables import clear_zao_boys, get_zao_boy, create_zao_boy, set_wan_boy, get_all_boys
+from .data_source import clear_zao_boys, get_zao_boy, create_zao_boy, set_wan_boy, get_all_boys
 
 zao = on_command('zao')
 @zao.handle()
