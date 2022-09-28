@@ -1,10 +1,14 @@
 from datetime import datetime
-from sqlalchemy import Column, DateTime, String, Boolean
+from sqlalchemy import Column, DateTime, String, Integer
 from database import Base
 
-class ZaoBoy(Base):
-    __tablename__ = 'zao_boy'
-    qq_id = Column(String(12), primary_key=True)
-    qq_nickname = Column(String)
+class ZaoGuy(Base):
+    __tablename__ = 'zao_guy'
+    # id           = Column(BigInteger, primary_key=True, autoincrement=True)
+    # sqlite BigInt can not auto increment
+    id           = Column(Integer, primary_key=True, autoincrement=True)
+    qq_id        = Column(String(16), index=True)
+    group_id     = Column(String(16), index=True)
+    nickname     = Column(String)
     zao_datetime = Column(DateTime, default=datetime.now)
-    has_wan = Column(Boolean, default=False)
+    wan_datetime = Column(DateTime, default=None, nullable=True)

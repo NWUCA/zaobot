@@ -1,45 +1,66 @@
-from datetime import datetime
-from nonebot import on_command, on_shell_command, require
-from nonebot.rule import ArgumentParser
+from datetime import datetime, timedelta
+from nonebot import on_command
 from nonebot.typing import T_State
-from nonebot.adapters import Bot, Event
-from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
+from nonebot.adapters import Bot
+from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, GROUP, Event
+from nonebot.params import CommandArg
 
-from .data_source import clear_zao_boys, get_zao_boy, create_zao_boy, set_wan_boy, get_all_boys
+from .data_source import (
+    ZaoGuy,
+    get_zao_guy,
+    get_zao_guys,
+    get_zao_guys_count,
+    create_zao_guy,
+    set_wan_guy,
+    get_yesterday_4_clock,
+)
 
-zao = on_command('zao')
+zao = on_command('zao', permission=GROUP)
 @zao.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    claim = str(event.get_message()).strip() or '少年'
-    qq_id = event.get_user_id()
-    zao_boy = await get_zao_boy(qq_id)
+async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
+    claim = arg.extract_plain_text().strip() or '少年'
+    # claim = str(event.get_message()).strip() or '少年'
+    uid      = event.user_id
+    gid      = event.group_id
+    nickname = event.sender.card or event.sender.nickname
+    zao_from = get_yesterday_4_clock()
+    zao_to   = zao_from + timedelta(days=1, minutes=5)
+
+    zao_boy: ZaoGuy = await get_zao_guy(uid, gid, zao_from, zao_to)
     if zao_boy is None:
-        count = await create_zao_boy(qq_id, event.sender.nickname)
+        await create_zao_guy(uid, gid, nickname)
+        count = await get_zao_guys_count(gid, zao_from, zao_to)
         await zao.finish(f'你是第{count}起床的{claim}。', at_sender=True)
-    if zao_boy.has_wan:
+    
+    if zao_boy.wan_datetime is not None:
         await zao.finish(f'你不是睡了吗？', at_sender=True)
+
     await zao.finish(f'你不是起床过了嘛？', at_sender=True)
 
-wan_parser = ArgumentParser()
-wan_parser.add_argument('delay', nargs='?', default=0, type=int, help='再过多少分钟睡觉')
-wan = on_shell_command('wan', parser=wan_parser)
+wan = on_command('wan', permission=GROUP)
 @wan.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    qq_id = event.get_user_id()
-    zao_boy = await get_zao_boy(qq_id)
-    if zao_boy is None:
+async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
+    uid      = event.user_id
+    gid      = event.group_id
+    zao_from = get_yesterday_4_clock()
+    zao_to   = zao_from + timedelta(days=1, minutes=5)
+    now      = datetime.now()
+    delay    = arg.extract_plain_text().strip()
+    delay    = int(delay) if delay.isdigit() else 0
+
+    zao_guy: ZaoGuy = await get_zao_guy(uid, gid, zao_from, zao_to)
+    if zao_guy is None:
         await wan.finish('Pia!<(=ｏ ‵-′)ノ☆ 不起床就睡，睡死你好了～', at_sender=True)
-    if zao_boy.has_wan:
+    if zao_guy.wan_datetime is not None:
         await wan.finish('睡着了的人是不能说话的哦（准备物理晚安）', at_sender=True)
-    
-    delay = getattr(state['args'], 'delay', 0)
+
     if delay < 0:
         await wan.finish('等你进入五维世界，这条指令没准儿可行', at_sender=True)
     elif delay > 264 * 60 + 24:
         await wan.finish('据维基百科记载，人类最长不睡觉时间的世界纪录是264.4小时，请保重', at_sender=True)
-    await set_wan_boy(qq_id)
+    await set_wan_guy(uid, gid, zao_from, zao_to, now)
 
-    wake_seconds: int = (datetime.now() - zao_boy.zao_datetime).seconds + delay * 60
+    wake_seconds: int = (now - zao_guy.zao_datetime).seconds + delay * 60
     wake_minutes = wake_seconds // 60
     wake_hours = wake_minutes // 60
     wake_seconds %= 60
@@ -51,21 +72,11 @@ async def _(bot: Bot, event: Event, state: T_State):
 zaoguys = on_command('zaoguys')
 @zaoguys.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    zao_boys = await get_all_boys()
-    print(zao_boys)
+    zao_from = get_yesterday_4_clock()
+    zao_to   = zao_from + timedelta(days=1, minutes=5)
+    zao_guys = await get_zao_guys(event.group_id, zao_from, zao_to)
     msg = ''
-    for index, boy in enumerate(zao_boys, 1):
-        msg += f'{index}. {boy.qq_nickname}, {boy.zao_datetime.hour}:{boy.zao_datetime.minute}\x0a'
+    for index, boy in enumerate(zao_guys, 1):
+        msg += f'{index}. {boy.card}, {boy.zao_datetime.hour}:{boy.zao_datetime.minute}\x0a'
     await zaoguys.finish(msg[:-1])
 
-scheduler = require('nonebot_plugin_apscheduler').scheduler
-@scheduler.scheduled_job('cron', hour=4)
-async def _():
-    print('凌晨四点清除zao boys名单')
-    await clear_zao_boys()
-
-clearzao = on_command('clearzao', permission=GROUP_OWNER|GROUP_ADMIN)
-@clearzao.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    await clear_zao_boys()
-    await clearzao.finish('已清除zao名单', at_sender=True)

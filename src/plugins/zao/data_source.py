@@ -1,36 +1,79 @@
-from typing import Union, List
-from sqlalchemy import update, delete, select
-from sqlalchemy.sql.expression import asc
-from sqlalchemy.sql.functions import func
+from datetime import date, datetime, timedelta
+from typing import Any, Callable, Union, List
+from sqlalchemy import update, delete
+from sqlalchemy.sql.expression import desc, asc, select, and_, Select, Update
+from sqlalchemy.sql.functions import func, Function
+from sqlalchemy.ext.asyncio import AsyncResult
 
 from database import AsyncDatabase as AD
-from database import ZaoBoy
+from database import ZaoGuy
 
-async def get_zao_boy(qq_id: str) -> Union[ZaoBoy, None]:
+select: Callable[[Any], Select]
+update: Callable[[Any], Update]
+func: Function
+
+async def get_zao_guy(qq_id: str, group_id: str, zao_from: datetime, zao_to: datetime) -> Union[ZaoGuy, None]:
     async with AD.session() as session:
-        return await session.get(ZaoBoy, qq_id)
+        result: AsyncResult = await session.execute(
+            select(ZaoGuy)
+            .where(and_(
+                ZaoGuy.qq_id        == qq_id,
+                ZaoGuy.group_id     == group_id,
+                ZaoGuy.zao_datetime >= zao_from,
+                ZaoGuy.zao_datetime <  zao_to))
+        )
+        return result.scalars().first()
 
-async def get_all_boys() -> List[ZaoBoy]:
+async def get_zao_guys(group_id: str, zao_from: datetime, zao_to: datetime) -> List[ZaoGuy]:
     async with AD.session() as session:
-        result = await session.execute(select(ZaoBoy).order_by(asc(ZaoBoy.zao_datetime)))
-        return list(a[0] for a in result.fetchall())
+        result: AsyncResult = await session.execute(
+            select(ZaoGuy)
+            .where(and_(
+                ZaoGuy.group_id     == group_id,
+                ZaoGuy.zao_datetime >= zao_from,
+                ZaoGuy.zao_datetime <  zao_to))
+            .order_by(asc(ZaoGuy.zao_datetime))
+        )
+        return list(result.scalars().all())
 
-async def create_zao_boy(qq_id: str, qq_nickname: str) -> int:
+async def get_zao_guys_count(group_id: str, zao_from: datetime, zao_to: datetime) -> int:
+    async with AD.session() as session:
+        result: AsyncResult = await session.execute(
+            select(func.count(ZaoGuy.qq_id))
+            .where(and_(
+                ZaoGuy.group_id     == group_id,
+                ZaoGuy.zao_datetime >= zao_from,
+                ZaoGuy.zao_datetime <  zao_to))
+        )
+        return result.scalar_one()
+
+async def create_zao_guy(qq_id: str, group_id: str, nickname: str) -> int:
     async with AD.session() as session:
         async with session.begin():
-            session.add(ZaoBoy(qq_id=qq_id, qq_nickname=qq_nickname))
-        return (await session.execute(func.count(ZaoBoy.qq_id))).first()[0]
-            
-async def set_wan_boy(qq_id: str) -> None:
+            session.add(ZaoGuy(qq_id=qq_id, group_id=group_id, nickname=nickname))
+
+async def set_wan_guy(
+        qq_id: str,
+        group_id: str,
+        zao_from: datetime,
+        zao_to: datetime,
+        wan_datetime: datetime) -> None:
+
     async with AD.session() as session:
         async with session.begin():
             await session.execute(
-                update(ZaoBoy)
-                .values(has_wan=True)
-                .where(ZaoBoy.qq_id == qq_id)
+                update(ZaoGuy)
+                .where(and_(
+                    ZaoGuy.qq_id        == qq_id,
+                    ZaoGuy.group_id     == group_id,
+                    ZaoGuy.zao_datetime >= zao_from,
+                    ZaoGuy.zao_datetime <  zao_to))
+                .values(wan_datetime=wan_datetime)
             )
-            
-async def clear_zao_boys() -> None:
-    async with async_session() as session:
-        async with session.begin():
-            await session.execute(delete(ZaoBoy))
+
+def get_yesterday_4_clock() -> datetime:
+    now = datetime.now()
+    t = datetime(now.year, now.month, now.day, 4, 0, 0)
+    if t > now:
+        t = t - timedelta(days=1)
+    return t
