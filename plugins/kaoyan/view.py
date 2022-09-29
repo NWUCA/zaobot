@@ -25,7 +25,7 @@ setky_parser = ArgumentParser()
 setky_parser.add_argument('month', metavar='M', type=int, help='月')
 setky_parser.add_argument('day',   metavar='D', type=int, help='日')
 
-setky = on_command("设置考研日期", priority=1, block=True, permission=GROUP_OWNER|GROUP_ADMIN)#, permission=SUPERUSER)
+setky = on_command("设置考研日期", priority=1, permission=GROUP_OWNER|GROUP_ADMIN)#, permission=SUPERUSER)
 
 
 @setky.handle()

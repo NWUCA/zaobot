@@ -18,6 +18,7 @@ Pillow = "^8.2.0"
 wordcloud = "^1.8.1"
 jieba = "^0.42.1"
 alembic = "^1.8.1"
+sqladmin = "^0.6.1"
 
 [tool.poetry.dev-dependencies]
 nonebot-test = "^0.1.0"

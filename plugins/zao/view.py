@@ -77,6 +77,6 @@ async def _(bot: Bot, event: Event, state: T_State):
     zao_guys = await get_zao_guys(event.group_id, zao_from, zao_to)
     msg = ''
     for index, boy in enumerate(zao_guys, 1):
-        msg += f'{index}. {boy.card}, {boy.zao_datetime.hour}:{boy.zao_datetime.minute}\x0a'
+        msg += f'{index}. {boy.nickname}, {boy.zao_datetime.hour}:{boy.zao_datetime.minute}\x0a'
     await zaoguys.finish(msg[:-1])
 

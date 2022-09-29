@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Column, DateTime, String, Integer
+from sqladmin import ModelView
 from database import Base
 
 class ZaoGuy(Base):
@@ -12,3 +13,16 @@ class ZaoGuy(Base):
     nickname     = Column(String)
     zao_datetime = Column(DateTime, default=datetime.now)
     wan_datetime = Column(DateTime, default=None, nullable=True)
+
+
+class ZaoGuyAdmin(ModelView, model=ZaoGuy):
+    column_list = [
+        ZaoGuy.id,
+        ZaoGuy.qq_id,
+        ZaoGuy.group_id,
+        ZaoGuy.nickname,
+        ZaoGuy.zao_datetime,
+        ZaoGuy.wan_datetime,
+    ]
+
+

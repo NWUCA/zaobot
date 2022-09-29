@@ -19,13 +19,13 @@ app = nonebot.get_asgi()
 
 driver = nonebot.get_driver()
 driver.register_adapter(Adapter)
-driver.on_startup(lambda: database.connect(driver.config.database_url))
+driver.on_startup(lambda: database.connect(driver.config.database_url, app))
 driver.on_shutdown(database.disconnect)
 
 # nonebot.load_builtin_plugins()
 # nonebot.load_from_toml("pyproject.toml")
 nonebot.load_plugin('nonebot_plugin_apscheduler')
-nonebot.load_plugins('src/plugins')
+nonebot.load_plugins('plugins')
 
 # Modify some config / config depends on loaded configs
 # 
