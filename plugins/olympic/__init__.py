@@ -14,5 +14,4 @@ config = Config(**global_config.dict())
 # def some_function():
 #     pass
 
-# 非奥运会期间关闭
-# from . import view
+from . import view

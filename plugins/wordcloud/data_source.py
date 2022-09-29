@@ -4,11 +4,6 @@ from sqlalchemy import select
 from database import AsyncDatabase as AD
 from database import GroupMessage
 
-async def store_msg(group_id: str, msg: str):
-    async with AD.session() as session:
-        async with session.begin():
-            session.add(GroupMessage(group_id=group_id, msg=msg))
-
 async def fetch_msg(group_id: str, delta: timedelta) -> StringIO:
     async with AD.engine().connect() as conn:
         async_result = await conn.stream(

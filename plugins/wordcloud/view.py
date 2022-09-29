@@ -8,13 +8,13 @@ from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.adapters.onebot.v11 import GROUP
 
-from .data_source import fetch_msg, store_msg
+from .data_source import fetch_msg
 
 PARENT_PATH = Path(__file__).parent
 
 ciyun_parser = ArgumentParser()
 ciyun_parser.add_argument('delta', nargs='?', default=7, type=int, help='距今多少天')
-ciyun = on_shell_command('ciyun', parser=ciyun_parser, permission=GROUP)
+ciyun = on_shell_command('ciyun', parser=ciyun_parser, permission=GROUP, block=True)
 @ciyun.handle()
 async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
     msg_buffer = await fetch_msg(event.group_id, state['args'].delta)
@@ -33,11 +33,3 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
     await ciyun.finish([
         {"type": "image", "data": {"file": img_base64}},
     ])
-
-
-store = on_message(block=False, permission=GROUP, priority=10)
-@store.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
-    text = event.get_plaintext().strip()
-    if text:
-        await store_msg(event.group_id, text)

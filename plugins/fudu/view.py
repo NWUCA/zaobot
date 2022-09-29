@@ -1,24 +1,9 @@
-import random
-
 from nonebot.plugin import on_message
-from nonebot.typing import T_State
-from nonebot.adapters import Bot, Event
+from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from .data_source import should_fudu
 
-from .model import FuDu
-
-fu_du = FuDu(msg='')
-
-fudu = on_message(block=False)
+fudu = on_message(priority=100)
 @fudu.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    global fu_du
-    msg = event.get_message()
-    if fu_du.msg == msg:
-        fu_du.repeat += 1
-    else:
-        fu_du.zero(msg)
-    if fu_du.has_fu_du or fu_du.repeat < 2:
-        return
-    if random.randint(0, max(0, 10 - fu_du.has_fu_du)) == 0:
-        fu_du.has_fu_du = True
-        await fudu.finish(msg)
+async def _(event: GroupMessageEvent):
+    if should_fudu(event.group_id, event.raw_message):
+        await fudu.finish(event.raw_message)

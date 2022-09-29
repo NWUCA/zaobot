@@ -1,6 +1,4 @@
 from nonebot import on_command
-from nonebot.typing import T_State
-from nonebot.adapters import Bot, Event
 
 msg = """——————help——————
 /zao [自称] 早
@@ -14,7 +12,7 @@ msg = """——————help——————
 /5000 <上> [下] 5000兆元生成
 ——————————————"""
 
-help = on_command('help')
+help = on_command('help', aliases={'?', 'github'}, priority=2, block=True)
 @help.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    await help.finish(msg)
+async def _():
+    await help.finish('https://github.com/MIXISAMA/zaobot', at_sender=True)
