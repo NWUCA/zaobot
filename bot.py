@@ -7,7 +7,15 @@ app = nonebot.get_asgi()
 
 driver = nonebot.get_driver()
 driver.register_adapter(Adapter)
-driver.on_startup(lambda: database.connect(driver.config.database_url, app))
+driver.on_startup(
+    lambda: database.connect(
+        driver.config.database_url,
+        driver.config.admin_secret,
+        driver.config.admin_username,
+        driver.config.admin_password,
+        app,
+    )
+)
 driver.on_shutdown(database.disconnect)
 
 plugins = [
@@ -16,7 +24,16 @@ plugins = [
     'plugins.record',
     'plugins.zao',
     'plugins.fudu',
+    'plugins.countdown',
     'plugins.caihongpi',
+    'plugins.yesorno',
+    'plugins.suoxie',
+
+    'plugins.choyen',
+    'plugins.phlogo',
+    # 'plugins.wordcloud',
+
+    # 'plugins.olympic',
 ]
 
 for plugin in plugins:

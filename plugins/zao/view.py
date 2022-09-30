@@ -15,7 +15,7 @@ from .data_source import (
     get_yesterday_4_clock,
 )
 
-zao = on_command('zao', permission=GROUP, priority=5, block=True)
+zao = on_command('zao', aliases={'早', '早安'}, permission=GROUP, priority=5, block=True)
 @zao.handle()
 async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
     claim = arg.extract_plain_text().strip() or '少年'
@@ -37,7 +37,7 @@ async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
 
     await zao.finish(f'你不是起床过了嘛？', at_sender=True)
 
-wan = on_command('wan', permission=GROUP, priority=5)
+wan = on_command('wan', aliases={'晚', '晚安'}, permission=GROUP, priority=5)
 @wan.handle()
 async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
     uid      = event.user_id
@@ -69,7 +69,7 @@ async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
     msg += f'今天共清醒{wake_hours}小时{wake_minutes}分{wake_seconds}秒，辛苦了。'
     await wan.finish(msg, at_sender=True)
 
-zaoguys = on_command('zaoguys', priority=5)
+zaoguys = on_command('zaoguys', aliases={'早起排行榜'}, priority=5, block=True)
 @zaoguys.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     zao_from = get_yesterday_4_clock()

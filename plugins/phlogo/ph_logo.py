@@ -85,7 +85,6 @@ def combine_img(left_text:str, right_text, font_size:int):
     bg_img.paste(left_img, (blank, 0))
     bg_img.paste(right_img, (blank + left_img.width, int((bg_img_height - right_img.height) / 2)), mask=right_img)
     return bg_img
-    
 
 if __name__ == "__main__":
     left_text = input()

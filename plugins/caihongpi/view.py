@@ -1,7 +1,7 @@
 from nonebot import on_command
 import httpx
 
-chp = on_command('chp', priority=10, block=True)
+chp = on_command('chp', aliases={'彩虹屁'}, priority=10, block=True)
 @chp.handle()
 async def _():
     async with httpx.AsyncClient() as client:

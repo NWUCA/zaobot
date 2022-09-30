@@ -1,12 +1,10 @@
-import base64
 import sys
 import asyncio
-from pathlib import  Path
+from pathlib import Path
 
-from nonebot import on_shell_command
-from nonebot.rule import ArgumentParser
-from nonebot.typing import T_State
-from nonebot.adapters import Bot, Event
+from nonebot import on_command
+from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, MessageSegment
+from nonebot.params import CommandArg
 
 from .util import safe
 
@@ -15,18 +13,13 @@ IMAGE_PATH = (PARENT_PATH / 'ph.png').resolve()
 lock = asyncio.Lock()
 encoding = 'gbk' if (sys.platform == 'win32') else 'utf-8'
 
-ph_parser = ArgumentParser()
-ph_parser.add_argument('left')
-ph_parser.add_argument('right')
-
-ph = on_shell_command('ph', parser=ph_parser)
+ph = on_command('ph', aliases={'pornhub'}, priority=5, block=True)
 @ph.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    left = getattr(state['args'], 'left', None)
-    right = getattr(state['args'], 'right', None)
-    if not left or not right:
+async def _(event: GroupMessageEvent, arg: Message = CommandArg()):
+    args = arg.extract_plain_text().strip().split()
+    if len(args) != 2:
         return
-
+    left, right = args
     process = await asyncio.create_subprocess_shell(
         f'python {PARENT_PATH}/ph_logo.py',
         stdin=asyncio.subprocess.PIPE,
@@ -37,6 +30,4 @@ async def _(bot: Bot, event: Event, state: T_State):
     )
     img_base64 = 'base64://' + stdout.decode(encoding).strip()[2:-1]
     await process.wait()
-    await ph.finish([
-        {"type": "image", "data": {"file": img_base64}},
-    ])
+    await ph.finish(MessageSegment.image(img_base64))

@@ -1,7 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any, Callable, Union, List
-from sqlalchemy import update, delete
-from sqlalchemy.sql.expression import desc, asc, select, and_, Select, Update
+from sqlalchemy.sql.expression import asc, select, update, and_, Select, Update
 from sqlalchemy.sql.functions import func, Function
 from sqlalchemy.ext.asyncio import AsyncResult
 
