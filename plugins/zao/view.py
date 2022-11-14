@@ -5,15 +5,16 @@ from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, GROUP, Event
 from nonebot.params import CommandArg
 
-from .data_source import (
-    ZaoGuy,
+from database.zao.model import ZaoGuy
+from database.zao.method import (
     get_zao_guy,
     get_zao_guys,
     get_zao_guys_count,
     create_zao_guy,
     set_wan_guy,
-    get_yesterday_4_clock,
 )
+
+from .data_source import get_yesterday_4_clock
 
 zao = on_command('zao', aliases={'早', '早安'}, permission=GROUP, priority=5, block=True)
 @zao.handle()

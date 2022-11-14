@@ -1,23 +1,43 @@
-from random import sample
 import string
+from random import sample
+from pathlib import Path
+from importlib import import_module
 from typing import Callable
+
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
-
-from .record import GroupMessage, GroupMessageAdmin
-from .zao import ZaoGuy, ZaoGuyAdmin
-from .notice import Notice, NoticeAdmin
-from sqladmin import Admin
+from sqladmin.application import Admin
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
+
+class Register:
+    def __init__(self) -> None:
+        self.members = []
+    def __call__(self, cls) -> None:
+        self.members.append(cls)
+
+register = Register()
+
+
+Base = declarative_base()
+
+for path in Path(__package__).iterdir():
+    if path.is_file():
+        continue
+    if (path / 'model.py').is_file():
+        module_name = f'.{path.name}.model'
+        import_module(module_name, __package__)
+    if (path / 'admin.py').is_file():
+        module_name = f'.{path.name}.admin'
+        import_module(module_name, __package__)
 
 class AsyncDatabase:
     engine:  AsyncEngine                = None
     session: Callable[[], AsyncSession] = None
-    admin:   Admin                      = None
+
+admin: Admin = None
 
 def connect(
     database_url: str,
@@ -26,14 +46,15 @@ def connect(
     password: str,
     app
 ):
+    global admin
     AsyncDatabase.engine = create_async_engine(database_url, echo=True)
     AsyncDatabase.session = sessionmaker(AsyncDatabase.engine, expire_on_commit=False, class_=AsyncSession)
 
     authentication_backend = MyBackend(secret, username, password)
-    AsyncDatabase.admin = Admin(app, AsyncDatabase.engine, authentication_backend=authentication_backend)
-    AsyncDatabase.admin.add_view(GroupMessageAdmin)
-    AsyncDatabase.admin.add_view(ZaoGuyAdmin)
-    AsyncDatabase.admin.add_view(NoticeAdmin)
+    admin = Admin(app, AsyncDatabase.engine, authentication_backend=authentication_backend)
+
+    for view in register.members:
+        admin.add_view(view)
 
 async def disconnect():
     await AsyncDatabase.engine.dispose()
@@ -69,3 +90,5 @@ class MyBackend(AuthenticationBackend):
             return True
 
         return False
+
+

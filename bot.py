@@ -1,9 +1,18 @@
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter
 import database
+from fastapi.middleware.cors import CORSMiddleware
 
 nonebot.init()
 app = nonebot.get_asgi()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 driver = nonebot.get_driver()
 driver.register_adapter(Adapter)
@@ -20,6 +29,8 @@ driver.on_shutdown(database.disconnect)
 
 plugins = [
     'nonebot_plugin_apscheduler',
+    
+    # 'plugins.schedule',
     'plugins.help',
     'plugins.record',
     'plugins.zao',

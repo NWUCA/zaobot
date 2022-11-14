@@ -1,24 +1,11 @@
 from datetime import date
-from typing import Any, Callable, List, Tuple
-from sqlalchemy.sql.expression import select, and_, Select, asc
-from sqlalchemy.ext.asyncio import AsyncResult
-from database import AsyncDatabase as AD
-from database import Notice
+from typing import List, Tuple
 
-select: Callable[[Any], Select]
+from database.group.method import get_unexpired_notices_order_by_date
 
 async def get_countdown_list(group_id: str) -> List[Tuple[str, int, bool]]:
-    async with AD.session() as session:
-        async with session.begin():
-            result: AsyncResult = await session.execute(
-                select(Notice)
-                .where(and_(
-                    Notice.group_id     == group_id,
-                    Notice.date         >= date.today()))
-                .order_by(asc(Notice.date))
-            )
-    notices: List[Notice] = list(result.scalars())
-    cd_list: List[Tuple[str, int]] = list()
+    cd_list = list()
+    notices = await get_unexpired_notices_order_by_date(group_id)
     for notice in notices:
         cd_list.append((notice.title, (notice.date - date.today()).days, notice.fixed))
     return cd_list
