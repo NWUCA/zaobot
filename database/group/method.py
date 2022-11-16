@@ -3,13 +3,13 @@ from datetime import timedelta, datetime, date
 from typing import Any, Callable, List
 from sqlalchemy.sql.expression import select, and_, Select, asc
 from sqlalchemy.ext.asyncio import AsyncResult
-from database import AsyncDatabase as AD
+from database import Database
 from database.group.model import GroupNotice, GroupMessage
 
 select: Callable[[Any], Select]
 
 async def get_unexpired_notices_order_by_date(group_id: str) -> List[GroupNotice]:
-    async with AD.session() as session:
+    async with Database.async_session() as session:
         async with session.begin():
             result: AsyncResult = await session.execute(
                 select(GroupNotice)
@@ -21,7 +21,7 @@ async def get_unexpired_notices_order_by_date(group_id: str) -> List[GroupNotice
     return list(result.scalars())
 
 async def store_group_msg(qq_id:str, group_id: str, message_id:str, message: str):
-    async with AD.session() as session:
+    async with Database.async_session() as session:
         async with session.begin():
             await session.add(GroupMessage(
                 qq_id=qq_id,
@@ -31,7 +31,7 @@ async def store_group_msg(qq_id:str, group_id: str, message_id:str, message: str
             ))
 
 async def get_group_messages(group_id: str, delta: timedelta) -> StringIO:
-    async with AD.engine().connect() as conn:
+    async with Database.async_engine().connect() as conn:
         async_result = await conn.stream(
             select(GroupMessage)
             .where(

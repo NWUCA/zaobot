@@ -1,94 +1,47 @@
-import string
-from random import sample
-from pathlib import Path
-from importlib import import_module
 from typing import Callable
 
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import create_engine, Engine
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 from sqlalchemy.ext.declarative import declarative_base
 
-from sqladmin.application import Admin
-from sqladmin.authentication import AuthenticationBackend
-from starlette.requests import Request
-
-class Register:
-    def __init__(self) -> None:
-        self.members = []
-    def __call__(self, cls) -> None:
-        self.members.append(cls)
-
-register = Register()
-
+from .util import load_subdirs_module
 
 Base = declarative_base()
 
-for path in Path(__package__).iterdir():
-    if path.is_file():
-        continue
-    if (path / 'model.py').is_file():
-        module_name = f'.{path.name}.model'
-        import_module(module_name, __package__)
-    if (path / 'admin.py').is_file():
-        module_name = f'.{path.name}.admin'
-        import_module(module_name, __package__)
+load_subdirs_module('model')
 
-class AsyncDatabase:
-    engine:  AsyncEngine                = None
-    session: Callable[[], AsyncSession] = None
+class OnConnected:
+    def __init__(self) -> None:
+        self.members = []
+    def __call__(self, func: Callable) -> None:
+        self.members.append(func)
 
-admin: Admin = None
+on_connected = OnConnected()
 
-def connect(
-    database_url: str,
-    secret: str,
-    username: str,
-    password: str,
-    app
-):
-    global admin
-    AsyncDatabase.engine = create_async_engine(database_url, echo=True)
-    AsyncDatabase.session = sessionmaker(AsyncDatabase.engine, expire_on_commit=False, class_=AsyncSession)
+class Database:
+    sync_engine:   Engine                     = None
+    sync_session:  Callable[[], Session]      = None
+    async_engine:  AsyncEngine                = None
+    async_session: Callable[[], AsyncSession] = None
 
-    authentication_backend = MyBackend(secret, username, password)
-    admin = Admin(app, AsyncDatabase.engine, authentication_backend=authentication_backend)
+    @staticmethod
+    def connect(
+        sync_database_url:  str,
+        async_database_url: str,
+    ):
+        Database.async_engine  = create_async_engine(async_database_url, echo=True)
+        Database.async_session = sessionmaker(Database.async_engine, expire_on_commit=False, class_=AsyncSession)
+        Database.sync_engine   = create_engine(sync_database_url, echo=True)
+        Database.sync_session  = sessionmaker(Database.sync_engine, expire_on_commit=False, class_=Session)
 
-    for view in register.members:
-        admin.add_view(view)
+        load_subdirs_module('listen')
 
-async def disconnect():
-    await AsyncDatabase.engine.dispose()
+        for func in on_connected.members:
+            func()
 
-class MyBackend(AuthenticationBackend):
-
-    def __init__(self, secret_key: str, username: str, password: str) -> None:
-        super().__init__(secret_key)
-        self.username = username
-        self.password = password
-        self.token = ''.join(sample(string.ascii_letters, 32))
-
-    async def login(self, request: Request) -> bool:
-        form = await request.form()
-        username, password = form["username"], form["password"]
-        if username == self.username and password == self.password:
-            self.token = ''.join(sample(string.ascii_letters, 32))
-            request.session.update({"token": self.token})
-            return True
-        return False
-
-    async def logout(self, request: Request) -> bool:
-        request.session.clear()
-        return True
-
-    async def authenticate(self, request: Request) -> bool:
-        token = request.session.get("token")
-
-        if not token:
-            return False
-
-        if token == self.token:
-            return True
-
-        return False
+    @staticmethod
+    async def disconnect():
+        await Database.async_engine.dispose()
 
 

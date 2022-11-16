@@ -1,8 +1,8 @@
 from sqladmin.models import ModelView
-from database import register
+from database.admin import admin_register
 from .model import ZaoGuy
 
-@register
+@admin_register
 class ZaoGuyAdmin(ModelView, model=ZaoGuy):
     column_list = [
         ZaoGuy.id,

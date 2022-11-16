@@ -5,12 +5,12 @@ from typing import Union
 
 from sqlalchemy.sql.expression import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncResult
-from database import AsyncDatabase as AD
+from database import Database
 
 from .model import GroupGridWeather3d
 
 async def get_last_group_grid_weather_3d(group_id: str) -> Union[GroupGridWeather3d, None]:
-    async with AD.session() as session:
+    async with Database.async_session() as session:
         async with session.begin():
             result: AsyncResult = await session.execute(
                 select(GroupGridWeather3d)
@@ -29,7 +29,7 @@ async def store_group_grid_weather_3d(
     update_time: datetime,
     forecast_date: date,
 ):
-    async with AD.session() as session:
+    async with Database.async_session() as session:
         async with session.begin():
             session.add(GroupGridWeather3d(
                 group_id=group_id,

@@ -1,6 +1,7 @@
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter
-import database
+from database import Database
+from database.admin import start_admin
 from database.schedule.method import update_tasks
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,9 +18,15 @@ app.add_middleware(
 
 driver = nonebot.get_driver()
 driver.register_adapter(Adapter)
+
 driver.on_startup(
-    lambda: database.connect(
-        driver.config.database_url,
+    lambda: Database.connect(
+        driver.config.sync_database_url,
+        driver.config.async_database_url,
+    )
+)
+driver.on_startup(
+    lambda: start_admin(
         driver.config.admin_secret,
         driver.config.admin_username,
         driver.config.admin_password,
@@ -27,12 +34,11 @@ driver.on_startup(
     )
 )
 driver.on_startup(update_tasks)
-driver.on_shutdown(database.disconnect)
+driver.on_shutdown(Database.disconnect)
 
 plugins = [
     'nonebot_plugin_apscheduler',
     
-    # 'plugins.schedule',
     'plugins.help',
     'plugins.record',
     'plugins.zao',

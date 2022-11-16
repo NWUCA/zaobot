@@ -1,16 +1,16 @@
-from .decorator import register
-from io import StringIO
-from datetime import timedelta, datetime, date
-from typing import Any, Callable, List
+from typing import List
 from sqlalchemy.sql.expression import update
-from sqlalchemy.ext.asyncio import AsyncResult
-from database import AsyncDatabase as AD
-from .model import Task
+
+from database import Database
+from .decorator import register
+from .model import Task, CronGroupTask
 
 async def update_tasks():
-    async with AD.session() as session:
+    async with Database.async_session() as session:
         async with session.begin():
             session.execute(update(Task).values(usable=False))
             for key in register.members:
                 await session.merge(Task(key=key, usable=True))
 
+def get_all_cron_group_tasks() -> List[CronGroupTask]:
+    return Database.sync_session().query(CronGroupTask).all()
