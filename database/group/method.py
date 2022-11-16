@@ -23,7 +23,7 @@ async def get_unexpired_notices_order_by_date(group_id: str) -> List[GroupNotice
 async def store_group_msg(qq_id:str, group_id: str, message_id:str, message: str):
     async with AD.session() as session:
         async with session.begin():
-            session.add(GroupMessage(
+            await session.add(GroupMessage(
                 qq_id=qq_id,
                 group_id=group_id,
                 message_id=message_id,

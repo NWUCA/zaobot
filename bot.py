@@ -1,6 +1,7 @@
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter
 import database
+from database.schedule.method import update_tasks
 from fastapi.middleware.cors import CORSMiddleware
 
 nonebot.init()
@@ -25,6 +26,7 @@ driver.on_startup(
         app,
     )
 )
+driver.on_startup(update_tasks)
 driver.on_shutdown(database.disconnect)
 
 plugins = [
@@ -45,6 +47,8 @@ plugins = [
     # 'plugins.wordcloud',
 
     # 'plugins.olympic',
+
+    'plugins.weather',
 ]
 
 for plugin in plugins:
