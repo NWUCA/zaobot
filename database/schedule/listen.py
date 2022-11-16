@@ -6,15 +6,16 @@ from nonebot_plugin_apscheduler import scheduler
 
 from database import on_connected
 from database.schedule.model import CronGroupTask
-from database.schedule.decorator import register
+from database.schedule.decorator import task_register
 
 from .method import get_all_cron_group_tasks
 
 def add_cron_group_task(task: CronGroupTask):
     scheduler.add_job(
-        register.get(task.task_key),
+        task_register.get(task.task_key),
         'cron',
         id=str(task.id),
+        kwargs={'group_id': task.group_id},
         **task.param,
     )
     print('添加定时任务', task.brief)

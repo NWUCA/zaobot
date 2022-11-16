@@ -23,8 +23,8 @@ class GroupLocation(Base):
     city           = Column(String)
     province       = Column(String)
     district       = Column(String)
-    north_latitude = Column(Float)
     east_longitude = Column(Float)
+    north_latitude = Column(Float)
 
     group          = relationship('Group', backref=backref("location", uselist=False))
 

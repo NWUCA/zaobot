@@ -1,12 +1,20 @@
 from io import StringIO
 from datetime import timedelta, datetime, date
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Union
 from sqlalchemy.sql.expression import select, and_, Select, asc
 from sqlalchemy.ext.asyncio import AsyncResult
 from database import Database
-from database.group.model import GroupNotice, GroupMessage
+from database.group.model import Group, GroupLocation, GroupNotice, GroupMessage
 
 select: Callable[[Any], Select]
+
+async def get_group(group_id: str) -> Union[Group, None]:
+    async with Database.async_session() as session:
+        return await session.get(Group, group_id)
+
+async def get_group_location(group_id: str) -> Union[GroupLocation, None]:
+    async with Database.async_session() as session:
+        return await session.get(GroupLocation, group_id)
 
 async def get_unexpired_notices_order_by_date(group_id: str) -> List[GroupNotice]:
     async with Database.async_session() as session:
@@ -23,7 +31,7 @@ async def get_unexpired_notices_order_by_date(group_id: str) -> List[GroupNotice
 async def store_group_msg(qq_id:str, group_id: str, message_id:str, message: str):
     async with Database.async_session() as session:
         async with session.begin():
-            await session.add(GroupMessage(
+            session.add(GroupMessage(
                 qq_id=qq_id,
                 group_id=group_id,
                 message_id=message_id,
