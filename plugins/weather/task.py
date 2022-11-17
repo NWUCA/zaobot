@@ -2,7 +2,7 @@ from datetime import datetime
 import nonebot
 
 from database.schedule.decorator import task_register
-from database.group.method import get_group, get_group_location
+from database.group.method import get_group_location
 from .data_source import get_grid_weather_today
 
 async def send_message_grid_weather_today(group_id: str):

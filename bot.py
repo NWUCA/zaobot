@@ -54,6 +54,7 @@ plugins = [
 
     # 'plugins.olympic',
 
+    'plugins.hotsearch',
     'plugins.weather',
 ]
 
