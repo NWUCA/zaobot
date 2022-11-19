@@ -96,3 +96,73 @@
 ### 2.2 复读
 
 随着群友复读次数增加，zaobot复读概率也会增加。
+
+## 3 开发者文档
+
+### 3.1 部署
+
+本项目使用 poetry 做依赖包管理。
+
+```bash
+cd ./zaobot
+# 进入poetry环境
+poetry shell
+# 安装依赖
+poetry install
+# 安装过程可能比较慢 可以添加 -vvv 参数看一下卡在哪里了
+# 如果出现问题可以试着更新一下 lock 文件
+poetry lock --no-update
+```
+
+目前数据库结构不稳定，需要在本地生成一次表迁移文件。
+
+```bash
+# 生成表迁移文件
+alembic revision --autogenerate -m "first generation"
+# 应用表迁移文件到数据库
+alembic upgrade head
+```
+
+运行之前还需要在项目根目录手动创建一个配置文件`.env`
+
+```conf
+ENVIRONMENT=dev
+
+HOST=127.0.0.1
+PORT=8080
+
+SYNC_DATABASE_URL=sqlite:///db.sqlite3
+ASYNC_DATABASE_URL=sqlite+aiosqlite:///db.sqlite3
+
+ADMIN_SECRET=<随机字符串>
+ADMIN_USERNAME=<admin 用户名>
+ADMIN_PASSWORD=<admin 密码>
+
+APSCHEDULER_AUTOSTART=true
+APSCHEDULER_CONFIG={"apscheduler.timezone": "Asia/Shanghai"}
+
+Q_WEATHER_KEY=<和风天气key>
+
+YIKE_APPID=<已不使用>
+YIKE_APPSECRET=<已不使用>
+TIAN_APIKEY=<已不使用>
+```
+
+本项目目前使用onebot-v11协议。推荐使用 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的反向代理模式。需要修改的配置如下。
+
+```yml
+account: # 账号相关
+  uin: 1233456 # QQ账号
+  password: '' # 密码为空时使用扫码登录
+servers:
+  - ws-reverse:
+      universal: ws://127.0.0.1:8080/onebot/v11/
+```
+
+万事俱备就可以运行了。
+
+```bash
+nb run
+```
+
+后台管理入口是在`http://127.0.0.1:8080/admin/`
