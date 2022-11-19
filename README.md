@@ -1,5 +1,9 @@
 # zaobot
 
+This branch has been archived!
+
+该分支已经归档!
+
 Thanks to the original [zaobot](https://github.com/huiyiqun/zaobot).
 
 Thanks to [Coolq HTTP API](https://github.com/richardchien/coolq-http-api) 
