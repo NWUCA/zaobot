@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "zaobot"
+version = "0.1.0"
+description = "zaobot"
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+nonebot2 = "^2.0.0b5"
+nb-cli = "^0.6.7"
+nonebot-adapter-cqhttp = "^2.0.0a13"
+nonebot-plugin-apscheduler = "^0.1.2"
+aiosqlite = "^0.17.0"
+SQLAlchemy = "^1.4.15"
+urllib3 = "^1.25.8"
+Pillow = "^8.2.0"
+wordcloud = "^1.8.1"
+jieba = "^0.42.1"
+alembic = "^1.8.1"
+sqladmin = "^0.6.1"
+
+[tool.poetry.dev-dependencies]
+nonebot-test = "^0.1.0"
+
+[nonebot.plugins]
+plugins = ["nonebot_plugin_apscheduler"]
+plugin_dirs = ["src/plugins"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
