@@ -96,3 +96,72 @@
 ### 2.2 复读
 
 随着群友复读次数增加，zaobot复读概率也会增加。
+
+### 3 开发者文档
+
+本项目使用 poetry 作为依赖包管理工具.
+
+```bash
+# 进入 poetry 环境
+poetry shell
+# 安装依赖
+poetry install
+```
+
+目前数据库结构不稳定，需要在本地生成第一份表迁移文件并应用。
+
+```bash
+# 生成表迁移文件
+alembic revision --autogenerate -m "first generation"
+# 应用表迁移文件
+alembic upgrade head
+```
+
+需要在根目录创建`.env`文件，作为必要的配置文件。
+
+```conf
+ENVIRONMENT=dev
+
+HOST=127.0.0.1
+PORT=8080
+
+SYNC_DATABASE_URL=sqlite:///db.sqlite3
+ASYNC_DATABASE_URL=sqlite+aiosqlite:///db.sqlite3
+
+APSCHEDULER_AUTOSTART=true
+APSCHEDULER_CONFIG={"apscheduler.timezone": "Asia/Shanghai"}
+
+ADMIN_SECRET=<自定义随机字符串用于加密>
+ADMIN_USERNAME=<后台管理员用户名>
+ADMIN_PASSWORD=<后台管理员密码>
+
+Q_WEATHER_KEY=<和风天气 api key>
+
+YIKE_APPID=<已不再使用>
+YIKE_APPSECRET=<已不再使用>
+TIAN_APIKEY=<已不再使用>
+```
+
+本项目使用 onebot v11 协议，推荐使用 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的反响代理模式。go-cqhttp `config.yml` 必要配置如下。
+
+```yml
+account: # 账号相关
+  uin: 123456789 # QQ账号
+  password: '123456789' # 密码为空时使用扫码登录
+
+message:
+  # 上报数据类型
+  # 可选: string,array
+  post-format: string
+
+# 连接服务列表
+servers:
+  - ws-reverse:
+      universal: ws://127.0.0.1:8080/onebot/v11/
+```
+
+完事具备以后就可以运行了，后台管理界面在`http://127.0.0.1:8080/admin/`
+
+```bash
+nb run
+```
