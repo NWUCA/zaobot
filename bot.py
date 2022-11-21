@@ -30,9 +30,11 @@ driver.on_shutdown(Database.disconnect)
 
 plugins = [
     'nonebot_plugin_apscheduler',
-    
+
+    'plugins.playwright',
     'plugins.help',
     'plugins.record',
+
     'plugins.zao',
     'plugins.fudu',
     'plugins.countdown',

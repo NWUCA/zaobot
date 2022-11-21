@@ -117,6 +117,12 @@ alembic revision --autogenerate -m "first generation"
 alembic upgrade head
 ```
 
+使用 playwright 的截屏功能生成图片，还需要手动下载浏览器。
+
+```bash
+playwright install chromium
+```
+
 需要在根目录创建`.env`文件，作为必要的配置文件。
 
 ```conf

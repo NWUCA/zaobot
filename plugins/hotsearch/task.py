@@ -1,8 +1,9 @@
 from datetime import datetime
 import nonebot
+from nonebot.adapters.onebot.v11 import MessageSegment as QQMS
 
 from database.schedule.decorator import task_register
-from .data_source import get_weibo_hot_search
+from .data_source import get_weibo_hot_search, gen_weibo_hot_search_image
 
 @task_register(key='推送实时微博热搜榜')
 async def _(group_id: str):
@@ -21,3 +22,14 @@ async def send_message_weibo_hot_search(group_id: str):
     bot = nonebot.get_bot()
     await bot.send_group_msg(group_id=group_id, message=msg)
 
+@task_register(key='推送实时微博热搜榜图片')
+async def _(group_id: str):
+    await send_image_weibo_hot_search(group_id)
+
+async def send_image_weibo_hot_search(group_id: str):
+    img = await gen_weibo_hot_search_image()
+    if not img:
+        print('获取微博热搜榜失败')
+        return
+    bot = nonebot.get_bot()
+    await bot.send_group_msg(group_id=group_id, message=QQMS.image(img))

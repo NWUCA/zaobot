@@ -1,0 +1,116 @@
+<img class="top" src="https://api.minio.zhangjunbo.top/home/picgo/2022/11/22/20180201141807_searchtopimg750-350_repeat_1669065600005__764039.jpeg"/>
+<div class="notice">
+  <span class="time">实时热点 {{ time }}</span>
+  <!-- <span>发送 [/rs 序号] 获取链接</span> -->
+</div>
+<div class="table">
+  {% for d in data %}
+    <div class="item">
+      {% if loop.index0 <= 3 %}
+        {% set index_color = "#ff7044" %}
+      {% else %}
+        {% set index_color = "#ffb144" %}
+      {% endif %}
+      <span
+        class="index"
+        style="color: {{ index_color }}"
+      >
+        {{ d.index }}
+      </span>
+      <span class="title">
+        {{ d.title }}
+        {% if d.num is not none %}
+          <span class="num">{{ d.num }}</span>
+          {% endif %}
+      </span>
+      {% if d.icon is not none %}
+        <span
+          class="icon"
+          style="background-color: {{ d.icon_color }}"
+        >
+          {{ d.icon }}
+        </span>
+      {% endif %}
+    </div>
+    <hr>
+  {% endfor %}
+</div>
+
+
+<style type="text/css">
+
+@font-face {
+  font-family: YangRenDongZhuShiTi-Regular;
+  src: url(https://api.minio.zhangjunbo.top/home/picgo/2022/11/22/YangRenDongZhuShiTi-Regular-2_repeat_1669064288030__180056.ttf);
+}
+
+@font-face {
+  font-family: UnDotumBold;
+  src: url(https://api.minio.zhangjunbo.top/home/picgo/2022/11/22/UnDotumBold-2_repeat_1669064600060__538727.ttf);
+}
+
+body {
+  background: #f6f6f6;
+  margin: 0rem;
+}
+
+.top {
+  width: 100%;
+}
+
+.notice {
+  display: flex;
+  /* font-family: UnDotumBold; */
+  font-size: 2rem;
+  color: #555;
+  background: #ccc;
+  padding: 0.5rem;
+}
+
+.time {
+  flex-grow: 1;
+}
+
+.table {
+  font-size: 3rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  margin: 1rem;
+  /* padding: 1rem; */
+}
+
+.index {
+  font-family: UnDotumBold;
+  font-style: italic;
+  color: #ff7044;
+  margin-right: 2rem;
+}
+
+.title {
+  flex-grow: 1;
+  font-family: YangRenDongZhuShiTi-Regular;
+  color: #333333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.num {
+  font-family: YangRenDongZhuShiTi-Regular;
+  font-size: 2rem;
+  color: #999;
+}
+
+.icon {
+  font-size: 1.8rem;
+  color: white;
+  border-radius: 0.2rem;
+  background-color: #ff3852;
+  padding: 0.2rem;
+  margin-left: 1rem;
+}
+
+</style>
