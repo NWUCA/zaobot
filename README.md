@@ -87,6 +87,21 @@
 * 例子:
   * `/ask 今天吃东食堂嘛？`
 
+### 1.11 今日天气
+
+* 命令: `/weather`
+* 别名: `tq` `天气` `今日天气`
+
+### 1.12 实时微博热搜
+
+* 命令: `/hotsearch`
+* 别名: `rs` `resou` `wbrs` `热搜` `微博热搜`
+
+### 1.13 每日60s读懂世界
+
+* 命令: `/60s`
+* 别名: `60`
+
 ## 2 被动列表
 
 ### 2.1 记录消息
@@ -97,7 +112,13 @@
 
 随着群友复读次数增加，zaobot复读概率也会增加。
 
-### 3 开发者文档
+## 3 定时任务
+
+* 推送今日天气
+* 推送微博热搜
+* 推送每日60秒读懂世界
+
+## 4 开发者文档
 
 本项目使用 poetry 作为依赖包管理工具.
 
@@ -117,7 +138,7 @@ alembic revision --autogenerate -m "first generation"
 alembic upgrade head
 ```
 
-使用 playwright 的截屏功能生成图片，还需要手动下载浏览器。
+zaobot 使用 playwright 的截屏功能生成图片，还需要手动下载浏览器。
 
 ```bash
 playwright install chromium
@@ -148,7 +169,7 @@ YIKE_APPSECRET=<已不再使用>
 TIAN_APIKEY=<已不再使用>
 ```
 
-本项目使用 onebot v11 协议，推荐使用 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的反响代理模式。go-cqhttp `config.yml` 必要配置如下。
+本项目使用 onebot v11 协议，推荐使用 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的反向代理模式。go-cqhttp `config.yml` 必要配置如下。
 
 ```yml
 account: # 账号相关
@@ -166,7 +187,7 @@ servers:
       universal: ws://127.0.0.1:8080/onebot/v11/
 ```
 
-完事具备以后就可以运行了，后台管理界面在`http://127.0.0.1:8080/admin/`
+万事具备以后就可以运行了，后台管理界面在`http://127.0.0.1:8080/admin/`
 
 ```bash
 nb run
