@@ -48,6 +48,7 @@ plugins = [
 
     # 'plugins.olympic',
 
+    'plugins.sendmessage',
     'plugins.daily60s',
     'plugins.hotsearch',
     'plugins.weather',

@@ -15,7 +15,10 @@ def add_cron_group_task(task: CronGroupTask):
         task_register.get(task.task_key),
         'cron',
         id=str(task.id),
-        kwargs={'group_id': task.group_id},
+        kwargs={
+            'group_id': task.group_id,
+            'addition': task.addition,
+        },
         **task.param,
     )
     print('添加定时任务', task.brief)

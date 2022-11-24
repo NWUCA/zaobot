@@ -33,6 +33,8 @@ class CronGroupTask(Base):
     minute      = Column(String, default='0', nullable=True)
     second      = Column(String, default='0', nullable=True)
 
+    addition    = Column(String, nullable=True)
+
     group: Group = relationship('Group', backref=backref("cron_group_tasks"))
     task:  Task  = relationship('Task',  backref=backref("cron_group_tasks"))
 
