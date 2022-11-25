@@ -11,14 +11,18 @@ from database.schedule.decorator import task_register
 from .method import get_all_cron_group_tasks
 
 def add_cron_group_task(task: CronGroupTask):
+    task_fun = task_register.get(task.task_key)
+    kwargs = {}
+    if 'group_id' in task_fun.__code__.co_varnames:
+        kwargs['group_id'] = task.group_id
+    if 'addition' in task_fun.__code__.co_varnames:
+        kwargs['addition'] = task.addition
+
     scheduler.add_job(
-        task_register.get(task.task_key),
+        task_fun,
         'cron',
         id=str(task.id),
-        kwargs={
-            'group_id': task.group_id,
-            'addition': task.addition,
-        },
+        kwargs=kwargs,
         **task.param,
     )
     print('添加定时任务', task.brief)
