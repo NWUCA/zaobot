@@ -1,0 +1,78 @@
+{
+    "code": "200",
+    "updateTime": "2022-11-30T19:00+08:00",
+    "fxLink": "http://hfx.link/1",
+    "daily": [
+        {
+            "fxDate": "2022-11-30",
+            "tempMax": "-2",
+            "tempMin": "-3",
+            "iconDay": "102",
+            "iconNight": "150",
+            "textDay": "少云",
+            "textNight": "晴",
+            "wind360Day": "103",
+            "windDirDay": "东南风",
+            "windScaleDay": "4-5",
+            "windSpeedDay": "6",
+            "wind360Night": "270",
+            "windDirNight": "西风",
+            "windScaleNight": "3-4",
+            "windSpeedNight": "2",
+            "humidity": "80",
+            "precip": "0.03",
+            "pressure": "990",
+            "cloud": "37"
+        },
+        {
+            "fxDate": "2022-12-01",
+            "tempMax": "1",
+            "tempMin": "-3",
+            "iconDay": "102",
+            "iconNight": "151",
+            "textDay": "少云",
+            "textNight": "多云",
+            "wind360Day": "45",
+            "windDirDay": "东北风",
+            "windScaleDay": "3-4",
+            "windSpeedDay": "3",
+            "wind360Night": "354",
+            "windDirNight": "北风",
+            "windScaleNight": "3-4",
+            "windSpeedNight": "4",
+            "humidity": "70",
+            "precip": "0.00",
+            "pressure": "983",
+            "cloud": "31"
+        },
+        {
+            "fxDate": "2022-12-02",
+            "tempMax": "3",
+            "tempMin": "-3",
+            "iconDay": "100",
+            "iconNight": "151",
+            "textDay": "晴",
+            "textNight": "多云",
+            "wind360Day": "51",
+            "windDirDay": "东北风",
+            "windScaleDay": "1-2",
+            "windSpeedDay": "1",
+            "wind360Night": "235",
+            "windDirNight": "西南风",
+            "windScaleNight": "3-4",
+            "windSpeedNight": "2",
+            "humidity": "75",
+            "precip": "0.00",
+            "pressure": "974",
+            "cloud": "12"
+        }
+    ],
+    "refer": {
+        "sources": [
+            "QWeather"
+        ],
+        "license": [
+            "CC BY-SA 4.0"
+        ]
+    }
+}

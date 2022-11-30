@@ -1,0 +1,48 @@
+<div class="subcard today">
+  <div class="today-item">
+    <span>{{ today.windScaleDay }}级</span>
+    <span>白天{{ today.windDirDay }}</span>
+  </div>
+  <div class="today-item">
+    <span>{{ today.windScaleNight }}级</span>
+    <span>夜间{{ today.windDirNight }}</span>
+  </div>
+  <div class="today-item">
+    <span>{{ today.humidity }}%</span>
+    <span>相对湿度</span>
+  </div>
+<div class="today-item">
+    <span>{{ today.precip }}mm</span>
+    <span>降水量</span>
+  </div>
+  <div class="today-item">
+    <span>{{ today.pressure }}hPa</span>
+    <span>大气压</span>
+  </div>
+</div>
+<style>
+
+.today {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.today-item {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-left: 2rem;
+}
+
+.today-item span:nth-child(1) {
+  font-weight: bold;
+  height: 4rem;
+}
+
+.today-item span:nth-child(2) {
+  font-size: 0.8em;
+  color: lightgray;
+}
+
+</style>
