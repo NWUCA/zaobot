@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/qweather-icons@1.1.1/font/qweather-icons.css">
+<head>
+<title>Weather Card</title>
+</head>
+<body>
+
+<div class="content">
+  <div class="top-right">
+    <span>{{ time_string }}</span>
+    <span>{{ address_string }}</span>
+  </div>
+  <div class="primary-content">
+    <i class="qi-{{now.icon}}"></i>
+    <div>
+      <span>{{ now.temp }}°</span>
+      <span>{{ now.text }}</span>
+    </div>
+  </div>
+  <span class="summary">今天白天{{ today.textDay }}，夜间{{ today.textNight }}，{{ comfortable_text }}</span>
+
+  {% include 'template/section_today.jinja2' %}
+  {% include 'template/section_future_24h.jinja2' %}
+  {% include 'template/section_aqi.jinja2' %}
+
+  {% for w in warning %}
+    <div class="subcard warning">
+      <span>{{ w.text }}</span>
+    </div>
+  {% endfor %}
+
+</div>
+
+</body>
+<style>
+
+html {
+  font-size: 1vw;
+  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(255, 244, 228);
+  min-height: 100vh;
+  background-image: linear-gradient( 358.7deg,  rgba(42,136,157,1) 1.7%, rgba(122,197,214,1) 51.1%, rgba(211,232,242,1) 95.5% );
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  font-size: 3rem;
+  border-radius: 5rem;
+  box-shadow: 0rem 0rem 1rem 1rem rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient( 111.5deg, rgba(20,100,196,1) 0.4%, rgba(33,152,214,1) 100.2% );
+}
+
+.top-right {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  top: 3rem;
+  right: 3rem;
+  font-size: 2rem;
+}
+
+.primary-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 5rem;
+}
+
+.primary-content i {
+  font-size: 20rem;
+}
+
+.primary-content div {
+  display: flex;
+  flex-direction: column;
+  margin-left: 5rem;
+}
+
+
+.primary-content span {
+  font-weight: bold;
+}
+
+.primary-content span:nth-child(1) {
+  font-size: 8rem;
+}
+
+.primary-content span:nth-child(2) {
+  font-size: 5rem;
+}
+
+.title {
+  font-weight: bold;
+}
+
+.summary {
+  margin: 0rem 5rem;
+}
+
+.subcard {
+  margin-top: 3rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4rem;
+  border-radius: 5rem;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.warning {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.45em;
+  background-image: linear-gradient( 89.5deg,  rgba(51,102,153,1) 6.8%, rgba(102,51,153,1) 100.2% );
+}
+
+</style>
+</html>

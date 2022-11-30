@@ -1,0 +1,27 @@
+{
+    "code": "200",
+    "updateTime": "2022-11-30T22:53+08:00",
+    "fxLink": "http://hfx.link/40d4",
+    "now": {
+        "pubTime": "2022-11-30T22:00+08:00",
+        "aqi": "56",
+        "level": "2",
+        "category": "良",
+        "primary": "PM10",
+        "pm10": "61",
+        "pm2p5": "24",
+        "no2": "32",
+        "so2": "6",
+        "co": "0.7",
+        "o3": "26"
+    },
+    "refer": {
+        "sources": [
+            "QWeather",
+            "CNEMC"
+        ],
+        "license": [
+            "CC BY-SA 4.0"
+        ]
+    }
+}

@@ -1,0 +1,63 @@
+<div class="subcard future-24h">
+  <div class="title">24小时预报</div>
+  <div class="temperature-list">
+    {% for hourly in future_24h %}
+      <div class="temperature">
+        <span>{{ hourly.temp }}°</span>
+        <svg viewBox="0 0 10 {{ hourly.height * 10 }}" width="1rem" height="{{ hourly.height }}rem">
+          <line
+            x1="5" y1="5" x2="5" y2="{{ hourly.height * 10 - 5 }}"
+            stroke="lightblue"
+            stroke-width="5"
+            stroke-linecap="round"/>
+        </svg>
+        <i class="qi-{{ hourly.icon }}"></i>
+        <span>{{ hourly.time }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<style>
+
+.future-24h {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.temperature-list {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 3rem;
+}
+
+.temperature {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 7rem;
+}
+
+.temperature span:nth-child(1) {
+  font-size: 0.8em;
+}
+
+.temperature i {
+  margin-top: 0.3em;
+}
+
+.temperature span:nth-child(4) {
+  font-size: 0.7em;
+  color: lightgray;
+  margin-top: 0.5em;
+}
+
+
+.temperature-list div:nth-child({{ now_index }}) i,
+.temperature-list div:nth-child({{ now_index }}) span:nth-child(4) {
+  color: greenyellow;
+}
+
+</style>
