@@ -14,7 +14,7 @@ q_weather_key = nonebot.get_driver().config.q_weather_key
 
 format_url_weather_now = 'https://devapi.qweather.com/v7/grid-weather/now?location={},{}&key={}'
 format_url_weather_24h = 'https://devapi.qweather.com/v7/grid-weather/24h?location={},{}&key={}'
-format_url_weather_3d  = 'https://devapi.qweather.com/v7/grid-weather/3d?location={},{}&key={}'
+format_url_weather_3d  = 'https://devapi.qweather.com/v7/weather/3d?location={},{}&key={}'
 format_url_indices     = 'https://devapi.qweather.com/v7/indices/1d?location={},{}&key={}&type=0'
 format_url_warning     = 'https://devapi.qweather.com/v7/warning/now?location={},{}&key={}'
 format_url_air         = 'https://devapi.qweather.com/v7/air/now?location={},{}&key={}'
