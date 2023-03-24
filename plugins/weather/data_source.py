@@ -2,7 +2,7 @@ import pytz
 import aiofiles
 from pathlib import Path
 from typing import Union, Dict, Tuple
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 import nonebot
 import httpx
@@ -73,32 +73,29 @@ async def gen_weather_card_image(e: float, n: float, location: str) -> bytes:
     if min_temp >= max_temp:
         min_temp = max_temp - 1
 
-    now_index = 0
     future_24h = list()
-    for hourly in weather_24h['hourly'][::2]:
+    for i, hourly in enumerate(weather_24h['hourly'][:24:2]):
         temp = float(hourly['temp'])
         height = (temp - min_temp) / (max_temp - min_temp) * 10 + 2
-        fx_time = datetime.fromisoformat(hourly['fxTime'])
+        fx_time = now_datetime + timedelta(hours=i * 2)
         future_24h.append({
             'time': fx_time.strftime('%I%p'),
             'temp': hourly['temp'],
             'icon': hourly['icon'],
             'height': int(height),
         })
-        if fx_time <= now_datetime :
-            now_index += 1
 
     air = air['now']
     aqi = {
         'aqi': int(float(air['aqi'])),
         'category': air['category'],
         'detail': [
-            {'name': 'PM2.5', 'value': air['pm2p5'], 'percent': percent_from_avg(air['pm2p5'], 10)},
-            {'name': 'PM10',  'value': air['pm10'],  'percent': percent_from_avg(air['pm10'],  20)},
-            {'name': 'NO₂',   'value': air['no2'],   'percent': percent_from_avg(air['no2'],   40)},
-            {'name': 'SO₂',   'value': air['so2'],   'percent': percent_from_avg(air['so2'],   20)},
-            {'name': 'CO',    'value': air['co'],    'percent': percent_from_avg(air['co'],    4)},
-            {'name': 'O₃',    'value': air['o3'],    'percent': percent_from_avg(air['o3'],    100)},
+            {'name': 'PM2.5', 'value': air['pm2p5'], 'percent': percent_from_max(air['pm2p5'], 100)},
+            {'name': 'PM10',  'value': air['pm10'],  'percent': percent_from_max(air['pm10'],  400)},
+            {'name': 'NO₂',   'value': air['no2'],   'percent': percent_from_max(air['no2'],   100)},
+            {'name': 'SO₂',   'value': air['so2'],   'percent': percent_from_max(air['so2'],   40)},
+            {'name': 'CO',    'value': air['co'],    'percent': percent_from_max(air['co'],    10)},
+            {'name': 'O₃',    'value': air['o3'],    'percent': percent_from_max(air['o3'],    100)},
         ]
     }
 
@@ -116,11 +113,10 @@ async def gen_weather_card_image(e: float, n: float, location: str) -> bytes:
         today=today,
         future_24h=future_24h,
         aqi=aqi,
-        warning=warning['warning'],
-        now_index=now_index,
+        warning=warning['warning']
     )
 
-    async with get_new_page(**get_playwright().devices['iPhone 12']) as page:
+    async with get_new_page() as page:
         await page.add_style_tag(url='https://cdn.jsdelivr.net/npm/qweather-icons@1.1.1/font/qweather-icons.css')
         await page.set_content(html)
         return await page.screenshot(timeout=60_000, full_page=True)
@@ -128,6 +124,9 @@ async def gen_weather_card_image(e: float, n: float, location: str) -> bytes:
 
 def percent_from_avg(val: float, avg: float):
     return min(float(val) / avg / 8, 1)
+
+def percent_from_max(val: float, limit: float):
+    return min(float(val) / limit, 1)
 
 
 def date_week_str(d: date) -> str:
